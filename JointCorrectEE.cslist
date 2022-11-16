@@ -1,5 +1,6 @@
 src\Extensions\AtomExtensions.cs
 src\Extensions\MVRScriptExtensions.cs
+src\BoneConfig.cs
 src\JointCorrectEE.cs
 src\MorphConfig.cs
 src\Utils.cs

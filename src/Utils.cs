@@ -38,6 +38,10 @@ public static class Utils
         return dazMorph;
     }
 
+    /* TODO InverseLerp? */
+    public static float NormalizeFloat(float value, float start, float end) =>
+        Mathf.Clamp((value - start) / (end - start), 0, 1);
+
     public static bool PluginIsDuplicate(Atom atom, string storeId)
     {
         var regex = new Regex(@"^plugin#\d+_JointCorrectEE", RegexOptions.Compiled);

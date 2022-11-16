@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using SimpleJSON;
 using UnityEngine;
 
@@ -9,79 +9,6 @@ public class JointCorrectEE : MVRScript
 {
     public const string VERSION = "0.0.0";
     public static bool envIsDevelopment => VERSION.StartsWith("0.");
-
-    private MorphConfig
-        _lFootXp065,
-        _lFootXn040,
-        _rFootXp065,
-        _rFootXn040,
-        _lShinXp085,
-        _lShinXp140,
-        _rShinXp085,
-        _rShinXp140,
-        _lThighXp035,
-        _lThighXn055,
-        _lThighXn115,
-        _lThighYp075,
-        _lThighYn075,
-        _lThighZp085,
-        _lThighZp085Gens,
-        _lThighZn015,
-        // _lThighZn015Gens,
-        _rThighXp035,
-        _rThighXn055,
-        _rThighXn115,
-        _rThighYn075,
-        _rThighYp075,
-        _rThighZn085,
-        _rThighZn085Gens,
-        _rThighZp015,
-        _lHandZp080,
-        _rHandZn080,
-        _lForearmYn100,
-        _lForearmYn130,
-        _rForearmYp100,
-        _rForearmYp130,
-        _lShldrYn095,
-        _lShldrYp040,
-        _lShldrZn075,
-        _lShldrZn060,
-        _lShldrZp035,
-        _rShldrYp095,
-        _rShldrYn040,
-        _rShldrZp075,
-        _rShldrZp060,
-        _rShldrZn035,
-        _lCollarXn025,
-        _lCollarXp015,
-        _rCollarXn025,
-        _rCollarXp015,
-        _lCollarYn026,
-        _lCollarYp017,
-        _rCollarYn017,
-        _rCollarYp026,
-        _lCollarZn015,
-        _lCollarZp050,
-        _rCollarZn050,
-        _rCollarZp015,
-        _pelvisXp030,
-        _pelvisXn015,
-        _abdomenXn020,
-        _abdomenXp030,
-        _abdomen2Xn020,
-        _abdomen2Xp030,
-        _chestXp020,
-        _neckXn030,
-        _neckYp035,
-        _neckYn035,
-        _headXn045,
-        _headXp035,
-        // _cThighZ180Gens,
-        _cThighXn115,
-        _cThighXn115Gens,
-        _cThighZp180,
-        _cThighZp180Gens,
-        _cThighZn030Gens;
 
     private bool _initialized;
 
@@ -113,15 +40,10 @@ public class JointCorrectEE : MVRScript
     }
 
     private DAZCharacterSelector _geometry;
+    private static Atom person { get; set; }
     public static GenerateDAZMorphsControlUI morphsControlUI { get; private set; }
 
-    private readonly List<MorphConfig> _morphConfigs = new List<MorphConfig>();
-    private readonly List<Action> _drivers = new List<Action>();
-
-    private readonly StringBuilder _rLog = new StringBuilder();
-    private readonly StringBuilder _mLog = new StringBuilder();
-    private JSONStorableString _morphOut;
-    private JSONStorableString _jointOut;
+    private List<BoneConfig> _boneConfigs;
     private JSONStorableBool _locked;
 
     private LineRenderer _line;
@@ -134,379 +56,16 @@ public class JointCorrectEE : MVRScript
             yield return null;
         }
 
-        _geometry = (DAZCharacterSelector) containingAtom.GetStorableByID("geometry");
+        person = containingAtom;
+        _geometry = (DAZCharacterSelector) person.GetStorableByID("geometry");
         morphsControlUI = _geometry.morphsControlUI;
 
         /* TODO UI */
-
-        InitMorphs();
-        _initialized = true;
-    }
-
-    public void InitMorphs()
-    {
         _locked = this.NewJSONStorableBool("Lock", false);
         CreateToggle(_locked, true);
 
         if(envIsDevelopment)
         {
-            _morphOut = new JSONStorableString("morphout", "");
-            var dbugField = CreateTextField(_morphOut);
-            dbugField.height *= 4;
-
-            _jointOut = new JSONStorableString("jointout", "");
-            var joutField = CreateTextField(_jointOut, true);
-            joutField.height *= 4;
-        }
-
-        #region Collar
-
-        var lCollarBone = GetJoint("lCollar").GetComponent<DAZBone>();
-        _lCollarXn025 = GetMorph("LCollarX-025");
-        _lCollarXp015 = GetMorph("LCollarX+015");
-        _lCollarYn026 = GetMorph("LCollarY-026");
-        _lCollarYp017 = GetMorph("LCollarY+017");
-        _lCollarZn015 = GetMorph("LCollarZ-015");
-        _lCollarZp050 = GetMorph("LCollarZ+050");
-        _drivers.Add(() =>
-        {
-            var angles = lCollarBone.GetAnglesDegrees();
-
-            SetMorph(_lCollarXn025, angles.x, 0, -25);
-            SetMorph(_lCollarXp015, angles.x, 0, 15);
-
-            // Note: Y Inverted
-            SetMorph(_lCollarYn026, angles.y, 0, 26);
-            SetMorph(_lCollarYp017, angles.y, 0, -17);
-
-            // Note: Rotation order not honored, Z Inverted
-            SetMorph(_lCollarZn015, angles.z, 0, 15);
-            SetMorph(_lCollarZp050, angles.z, 0, -50);
-        });
-
-        var rCollarBone = GetJoint("rCollar").GetComponent<DAZBone>();
-        _rCollarXn025 = GetMorph("RCollarX-025");
-        _rCollarXp015 = GetMorph("RCollarX+015");
-        _rCollarYn017 = GetMorph("RCollarY-017");
-        _rCollarYp026 = GetMorph("RCollarY+026");
-        _rCollarZn050 = GetMorph("RCollarZ-050");
-        _rCollarZp015 = GetMorph("RCollarZ+015");
-        _drivers.Add(() =>
-        {
-            var angles = rCollarBone.GetAnglesDegrees();
-
-            // Note: Rotation order not honored
-            SetMorph(_rCollarXn025, angles.x, 0, -25);
-            SetMorph(_rCollarXp015, angles.x, 0, 15);
-
-            // Note: Y Inverted
-            SetMorph(_rCollarYn017, angles.y, 0, 17);
-            SetMorph(_rCollarYp026, angles.y, 0, -26);
-
-            // Note: Rotation order not honored, Z Inverted
-            SetMorph(_rCollarZn050, angles.z, 0, 50);
-            SetMorph(_rCollarZp015, angles.z, 0, -15);
-        });
-
-        #endregion
-
-        #region Foot
-
-        var lFootBone = GetJoint("lFoot").GetComponent<DAZBone>();
-        _lFootXp065 = GetMorph("LFootX+065");
-        _lFootXn040 = GetMorph("LFootX-040");
-        _drivers.Add(() =>
-        {
-            var angles = lFootBone.GetAnglesDegrees();
-            SetMorph(_lFootXn040, angles.x, 0, -40);
-            SetMorph(_lFootXp065, angles.x, 0, 65);
-        });
-
-        var rFootBone = GetJoint("rFoot").GetComponent<DAZBone>();
-        _rFootXp065 = GetMorph("RFootX+065");
-        _rFootXn040 = GetMorph("RFootX-040");
-        _drivers.Add(() =>
-        {
-            var angles = rFootBone.GetAnglesDegrees();
-            SetMorph(_rFootXn040, angles.x, 0, -40);
-            SetMorph(_rFootXp065, angles.x, 0, 65);
-        });
-
-        #endregion
-
-        #region Forearm
-
-        var lForearmBone = GetJoint("lForeArm").GetComponent<DAZBone>();
-        _lForearmYn100 = GetMorph("LForearmY-100");
-        _lForearmYn130 = GetMorph("LForearmY-130");
-        _drivers.Add(() =>
-        {
-            var angles = lForearmBone.GetAnglesDegrees();
-            // Note: Y Inverted
-            SetMorph(_lForearmYn100, angles.y, 0, 100);
-            SetMorph(_lForearmYn130, angles.y, 100, 130);
-        });
-
-        var rForearmBone = GetJoint("rForeArm").GetComponent<DAZBone>();
-        _rForearmYp100 = GetMorph("RForearmY+100");
-        _rForearmYp130 = GetMorph("RForearmY+130");
-        _drivers.Add(() =>
-        {
-            var angles = rForearmBone.GetAnglesDegrees();
-            // Note: Y Inverted
-            SetMorph(_rForearmYp100, angles.y, 0, -100);
-            SetMorph(_rForearmYp130, angles.y, -100, -130);
-        });
-
-        #endregion
-
-        #region Hand
-
-        var lHandBone = GetJoint("lHand").GetComponent<DAZBone>();
-        var rHandBone = GetJoint("rHand").GetComponent<DAZBone>();
-        _lHandZp080 = GetMorph("LHandZ+080");
-        _rHandZn080 = GetMorph("RHandZ-080");
-        _drivers.Add(() =>
-        {
-            var langles = lHandBone.GetAnglesDegrees();
-            var rangles = rHandBone.GetAnglesDegrees();
-            SetMorph(_lHandZp080, langles.z, 0, -80);
-            SetMorph(_rHandZn080, rangles.z, 0, 80);
-        });
-
-        #endregion
-
-        #region Shin
-
-        var lShinBone = GetJoint("lShin").GetComponent<DAZBone>();
-        _lShinXp085 = GetMorph("LShinX+085");
-        _lShinXp140 = GetMorph("LShinX+140");
-        _drivers.Add(() =>
-        {
-            var angles = lShinBone.GetAnglesDegrees();
-            SetMorph(_lShinXp085, angles.x, 0, 85);
-            SetMorph(_lShinXp140, angles.x, 85, 140);
-        });
-
-        var rShinBone = GetJoint("rShin").GetComponent<DAZBone>();
-        _rShinXp085 = GetMorph("RShinX+085");
-        _rShinXp140 = GetMorph("RShinX+140");
-        _drivers.Add(() =>
-        {
-            var angles = rShinBone.GetAnglesDegrees();
-            SetMorph(_rShinXp085, angles.x, 0, 85);
-            SetMorph(_rShinXp140, angles.x, 85, 140);
-        });
-
-        #endregion
-
-        #region Shoulder
-
-        var lShldrBone = GetJoint("lShldr").GetComponent<DAZBone>();
-        _lShldrZp035 = GetMorph("LShldrZ+035");
-        _lShldrZn060 = GetMorph("LShldrZ-060");
-        _lShldrZn075 = GetMorph("LShldrZ-075");
-        _lShldrYn095 = GetMorph("LShldrY-095");
-        _lShldrYp040 = GetMorph("LShldrY+040");
-        _drivers.Add(() =>
-        {
-            var angles = lShldrBone.GetAnglesDegrees();
-            // Note: Y Inverted
-            SetMorph(_lShldrYn095, angles.y, 0, 95);
-            SetMorph(_lShldrYp040, angles.y, 0, -40);
-            // Remove -Z as Y approaches -40
-            float zcor = angles.z * -NormalizeFloat(angles.y, 0, -40);
-            // Note: DAZ Z = VaM Z Inverted
-            SetMorph(_lShldrZp035, angles.z, 0, -35);
-            SetMorph(_lShldrZn060, angles.z + zcor, 0, 60);
-            SetMorph(_lShldrZn075, angles.z + zcor, 60, 75);
-        });
-
-        var rShldrBone = GetJoint("rShldr").GetComponent<DAZBone>();
-        _rShldrZn035 = GetMorph("RShldrZ-035");
-        _rShldrZp060 = GetMorph("RShldrZ+060");
-        _rShldrZp075 = GetMorph("RShldrZ+075");
-        _rShldrYn040 = GetMorph("RShldrY-040");
-        _rShldrYp095 = GetMorph("RShldrY+095");
-        _drivers.Add(() =>
-        {
-            var angles = rShldrBone.GetAnglesDegrees();
-            // Note: Y probably Inverted
-            SetMorph(_rShldrYn040, angles.y, 0, 40);
-            SetMorph(_rShldrYp095, angles.y, 0, -95);
-            // Remove +Z as Y approaches 40
-            float zcor = angles.z * -NormalizeFloat(angles.y, 0, 40);
-            // Note: DAZ Z = VaM Z Inverted
-            SetMorph(_rShldrZn035, angles.z, 0, 35);
-            SetMorph(_rShldrZp060, angles.z + zcor, 0, -60);
-            SetMorph(_rShldrZp075, angles.z + zcor, -60, -75);
-        });
-
-        #endregion
-
-        #region Thigh
-
-        _lThighXp035 = GetMorph("LThighX+035");
-        _lThighXn055 = GetMorph("LThighX-055");
-        _lThighXn115 = GetMorph("LThighX-115");
-        _lThighYp075 = GetMorph("LThighY+075");
-        _lThighYn075 = GetMorph("LThighY-075");
-        _lThighZp085 = GetMorph("LThighZ+085");
-        _lThighZp085Gens = GetMorph("LThighZ+085.gens");
-        _lThighZn015 = GetMorph("LThighZ-015");
-        // _lThighZn015gens = GetMorph("LThighZ-015.gens"); // unused
-
-        _rThighXp035 = GetMorph("RThighX+035");
-        _rThighXn055 = GetMorph("RThighX-055");
-        _rThighXn115 = GetMorph("RThighX-115");
-        _rThighYn075 = GetMorph("RThighY-075");
-        _rThighYp075 = GetMorph("RThighY+075");
-        _rThighZn085 = GetMorph("RThighZ-085");
-        _rThighZn085Gens = GetMorph("RThighZ-085.gens");
-        _rThighZp015 = GetMorph("RThighZ+015");
-
-        // _cThighZ180gens = GetMorph("CThighsZ180.gens"); // unused
-        _cThighZp180 = GetMorph("CThighsZ+180");
-        _cThighZp180Gens = GetMorph("CThighsZ+180.gens");
-        _cThighZn030Gens = GetMorph("CThighsZ-030.gens");
-        _cThighXn115 = GetMorph("CThighsX-115");
-        _cThighXn115Gens = GetMorph("CThighsX-115.gens");
-
-        var lThighBone = GetJoint("lThigh").GetComponent<DAZBone>();
-        var rThighBone = GetJoint("rThigh").GetComponent<DAZBone>();
-        _drivers.Add(() =>
-        {
-            var lAngles = lThighBone.GetAnglesDegrees();
-            var rAngles = rThighBone.GetAnglesDegrees();
-
-            SetMorph(_lThighXn115, lAngles.x, -55, -115);
-            SetMorph(_lThighXn055, lAngles.x, 0, -55);
-            SetMorph(_lThighXp035, lAngles.x, 0, 35);
-
-            SetMorph(_rThighXn115, rAngles.x, -55, -115);
-            SetMorph(_rThighXn055, rAngles.x, 0, -55);
-            SetMorph(_rThighXp035, rAngles.x, 0, 35);
-
-            // Note: DAZ Y = VAM Y Inverted
-            SetMorph(_lThighYn075, lAngles.y, 0, 75);
-            SetMorph(_lThighYp075, lAngles.y, 0, -75);
-
-            // Note: DAZ Y = VAM Y Inverted
-            SetMorph(_rThighYn075, rAngles.y, 0, 75);
-            SetMorph(_rThighYp075, rAngles.y, 0, -75);
-
-            // Note: DAZ Z = VAM Z Inverted
-            SetMorph(_lThighZn015, lAngles.z, 0, 15);
-            SetMorph(_lThighZp085, lAngles.z, 0, -85);
-            SetMorph(_lThighZp085Gens, lAngles.z, 0, -85);
-
-            // Note: DAZ Z = VAM Z Inverteda
-            SetMorph(_rThighZn085, rAngles.z, 0, 85);
-            SetMorph(_rThighZn085Gens, rAngles.z, 0, 85);
-            SetMorph(_rThighZp015, rAngles.z, 0, -15);
-
-            float thighZSeparation = rAngles.z - lAngles.z;
-            SetMorph(_cThighZp180, thighZSeparation, 0, 180);
-            SetMorph(_cThighZp180Gens, thighZSeparation, 0, 180);
-            SetMorph(_cThighZn030Gens, thighZSeparation, 0, -30);
-
-            float thighXCombination = (lAngles.x + rAngles.x) / 2;
-            SetMorph(_cThighXn115, thighXCombination, -55, -115);
-            SetMorph(_cThighXn115Gens, thighXCombination, -55, -115);
-        });
-
-        #endregion
-
-        #region Trunk
-
-        var pelvisBone = GetJoint("pelvis").GetComponent<DAZBone>();
-        _pelvisXp030 = GetMorph("TPelvisX+030");
-        _pelvisXn015 = GetMorph("TPelvisX-015");
-        _drivers.Add(() =>
-        {
-            var angles = pelvisBone.GetAnglesDegrees();
-            SetMorph(_pelvisXn015, angles.x, 0, -15);
-            SetMorph(_pelvisXp030, angles.x, 0, 30);
-        });
-
-        var abdomenBone = GetJoint("abdomen").GetComponent<DAZBone>();
-        _abdomenXn020 = GetMorph("TAbdomenX-020");
-        _abdomenXp030 = GetMorph("TAbdomenX+030");
-        _drivers.Add(() =>
-        {
-            var angles = abdomenBone.GetAnglesDegrees();
-            SetMorph(_abdomenXn020, angles.x, 0, -20);
-            SetMorph(_abdomenXp030, angles.x, 0, 30);
-        });
-
-        var abdomen2Bone = GetJoint("abdomen2").GetComponent<DAZBone>();
-        _abdomen2Xn020 = GetMorph("TAbdomen2X-020");
-        _abdomen2Xp030 = GetMorph("TAbdomen2X+030");
-        _drivers.Add(() =>
-        {
-            var angles = abdomen2Bone.GetAnglesDegrees();
-            SetMorph(_abdomen2Xn020, angles.x, 0, -20);
-            SetMorph(_abdomen2Xp030, angles.x, 0, 30);
-        });
-
-        var chestBone = GetJoint("chest").GetComponent<DAZBone>();
-        _chestXp020 = GetMorph("TChestX+020");
-        _drivers.Add(() =>
-        {
-            var angles = chestBone.GetAnglesDegrees();
-            SetMorph(_chestXp020, angles.x, 0, 20);
-        });
-
-        var neckBone = GetJoint("neck").GetComponent<DAZBone>();
-        _neckXn030 = GetMorph("TNeckX-030");
-        _neckYp035 = GetMorph("TNeckY+035");
-        _neckYn035 = GetMorph("TNeckY-035");
-        _drivers.Add(() =>
-        {
-            var angles = neckBone.GetAnglesDegrees();
-            SetMorph(_neckXn030, angles.x, 0, -30);
-            SetMorph(_neckYp035, angles.y, 0, -35);
-            SetMorph(_neckYn035, angles.y, 0, 35);
-        });
-
-        var headBone = GetJoint("head").GetComponent<DAZBone>();
-        _headXn045 = GetMorph("THeadX-045");
-        _headXp035 = GetMorph("THeadX+035");
-        _drivers.Add(() =>
-        {
-            var angles = headBone.GetAnglesDegrees();
-            SetMorph(_headXn045, angles.x, 0, -45);
-            SetMorph(_headXp035, angles.x, 0, 35);
-        });
-
-        #endregion
-
-        if(envIsDevelopment)
-        {
-            /* Debug bones */
-            _drivers.Add(() =>
-            {
-                PrintBone(lCollarBone);
-                PrintBone(rCollarBone);
-                PrintBone(lFootBone);
-                PrintBone(rFootBone);
-                PrintBone(lForearmBone);
-                PrintBone(rForearmBone);
-                PrintBone(lHandBone);
-                PrintBone(rHandBone);
-                PrintBone(lShinBone);
-                PrintBone(rShinBone);
-                PrintBone(lShldrBone);
-                PrintBone(rShldrBone);
-                PrintBone(lThighBone);
-                PrintBone(rThighBone);
-                PrintBone(pelvisBone);
-                PrintBone(abdomenBone);
-                PrintBone(abdomen2Bone);
-                PrintBone(chestBone);
-                PrintBone(neckBone);
-            });
-
             _line = gameObject.GetComponent<LineRenderer>();
             if(_line == null)
             {
@@ -520,8 +79,540 @@ public class JointCorrectEE : MVRScript
             _line.endWidth = 0.00f;
         }
 
-        _locked.val = false;
+        InitMorphs();
+        _initialized = true;
     }
+
+    public void InitMorphs()
+    {
+        _boneConfigs = new List<BoneConfig>();
+
+        /* Collars */
+        {
+            var left = GetBone("lCollar");
+            var lCollarXn025 = NewMorphConfig("LCollarX-025");
+            var lCollarXp015 = NewMorphConfig("LCollarX+015");
+            var lCollarYn026 = NewMorphConfig("LCollarY-026");
+            var lCollarYp017 = NewMorphConfig("LCollarY+017");
+            var lCollarZn015 = NewMorphConfig("LCollarZ-015");
+            var lCollarZp050 = NewMorphConfig("LCollarZ+050");
+
+            var right = GetBone("rCollar");
+            var rCollarXn025 = NewMorphConfig("RCollarX-025");
+            var rCollarXp015 = NewMorphConfig("RCollarX+015");
+            var rCollarYn017 = NewMorphConfig("RCollarY-017");
+            var rCollarYp026 = NewMorphConfig("RCollarY+026");
+            var rCollarZn050 = NewMorphConfig("RCollarZ-050");
+            var rCollarZp015 = NewMorphConfig("RCollarZ+015");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    lCollarXn025,
+                    lCollarXp015,
+                    lCollarYn026,
+                    lCollarYp017,
+                    lCollarZn015,
+                    lCollarZp050,
+                    rCollarXn025,
+                    rCollarXp015,
+                    rCollarYn017,
+                    rCollarYp026,
+                    rCollarZn050,
+                    rCollarZp015,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Collars", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var lAngles = left.GetAnglesDegrees();
+                    lCollarXn025.Update(lAngles.x, 0, -25);
+                    lCollarXp015.Update(lAngles.x, 0, 15);
+
+                    // Note: Y Inverted
+                    lCollarYn026.Update(lAngles.y, 0, 26);
+                    lCollarYp017.Update(lAngles.y, 0, -17);
+
+                    // Note: Rotation order not honored, Z Inverted
+                    lCollarZn015.Update(lAngles.z, 0, 15);
+                    lCollarZp050.Update(lAngles.z, 0, -50);
+
+                    var rAngles = right.GetAnglesDegrees();
+                    // Note: Rotation order not honored
+                    rCollarXn025.Update(rAngles.x, 0, -25);
+                    rCollarXp015.Update(rAngles.x, 0, 15);
+
+                    // Note: Y Inverted
+                    rCollarYn017.Update(rAngles.y, 0, 17);
+                    rCollarYp026.Update(rAngles.y, 0, -26);
+
+                    // Note: Rotation order not honored, Z Inverted
+                    rCollarZn050.Update(rAngles.z, 0, 50);
+                    rCollarZp015.Update(rAngles.z, 0, -15);
+                },
+            });
+        }
+
+        /* Feet */
+        {
+            var left = GetBone("lFoot");
+            var lFootXp065 = NewMorphConfig("LFootX+065");
+            var lFootXn040 = NewMorphConfig("LFootX-040");
+
+            var right = GetBone("rFoot");
+            var rFootXp065 = NewMorphConfig("RFootX+065");
+            var rFootXn040 = NewMorphConfig("RFootX-040");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    lFootXp065,
+                    lFootXn040,
+                    rFootXp065,
+                    rFootXn040,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Feet", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var lAngls = left.GetAnglesDegrees();
+                    lFootXn040.Update(lAngls.x, 0, -40);
+                    lFootXp065.Update(lAngls.x, 0, 65);
+
+                    var rAngles = right.GetAnglesDegrees();
+                    rFootXn040.Update(rAngles.x, 0, -40);
+                    rFootXp065.Update(rAngles.x, 0, 65);
+                },
+            });
+        }
+
+        /* Forearms */
+        {
+            var lForearmBone = GetBone("lForeArm");
+            var lForearmYn100 = NewMorphConfig("LForearmY-100");
+            var lForearmYn130 = NewMorphConfig("LForearmY-130");
+
+            var rForearmBone = GetBone("rForeArm");
+            var rForearmYp100 = NewMorphConfig("RForearmY+100");
+            var rForearmYp130 = NewMorphConfig("RForearmY+130");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    lForearmYn100,
+                    lForearmYn130,
+                    rForearmYp100,
+                    rForearmYp130,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Forearms", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var lAngles = lForearmBone.GetAnglesDegrees();
+                    // Note: Y Inverted
+                    lForearmYn100.Update(lAngles.y, 0, 100);
+                    lForearmYn130.Update(lAngles.y, 100, 130);
+
+                    var rAngles = rForearmBone.GetAnglesDegrees();
+                    // Note: Y Inverted
+                    rForearmYp100.Update(rAngles.y, 0, -100);
+                    rForearmYp130.Update(rAngles.y, -100, -130);
+                },
+            });
+        }
+
+        /* Hands */
+        {
+            var left = GetBone("lHand");
+            var lHandZp080 = NewMorphConfig("LHandZ+080");
+
+            var right = GetBone("rHand");
+            var rHandZn080 = NewMorphConfig("RHandZ-080");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    lHandZp080,
+                    rHandZn080,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Hands", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var lAngles = left.GetAnglesDegrees();
+                    lHandZp080.Update(lAngles.z, 0, -80);
+
+                    var rAngles = right.GetAnglesDegrees();
+                    rHandZn080.Update(rAngles.z, 0, 80);
+                },
+            });
+        }
+
+        /* Shins */
+        {
+            var left = GetBone("lShin");
+            var lShinXp085 = NewMorphConfig("LShinX+085");
+            var lShinXp140 = NewMorphConfig("LShinX+140");
+
+            var right = GetBone("rShin");
+            var rShinXp085 = NewMorphConfig("RShinX+085");
+            var rShinXp140 = NewMorphConfig("RShinX+140");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    lShinXp085,
+                    lShinXp140,
+                    rShinXp085,
+                    rShinXp140,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Shins", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var lAngles = left.GetAnglesDegrees();
+                    lShinXp085.Update(lAngles.x, 0, 85);
+                    lShinXp140.Update(lAngles.x, 85, 140);
+
+                    var rAngles = right.GetAnglesDegrees();
+                    rShinXp085.Update(rAngles.x, 0, 85);
+                    rShinXp140.Update(rAngles.x, 85, 140);
+                },
+            });
+        }
+
+        /* Shoulders */
+        {
+            var left = GetBone("lShldr");
+            var lShldrZp035 = NewMorphConfig("LShldrZ+035");
+            var lShldrZn060 = NewMorphConfig("LShldrZ-060");
+            var lShldrZn075 = NewMorphConfig("LShldrZ-075");
+            var lShldrYn095 = NewMorphConfig("LShldrY-095");
+            var lShldrYp040 = NewMorphConfig("LShldrY+040");
+
+            var right = GetBone("rShldr");
+            var rShldrZn035 = NewMorphConfig("RShldrZ-035");
+            var rShldrZp060 = NewMorphConfig("RShldrZ+060");
+            var rShldrZp075 = NewMorphConfig("RShldrZ+075");
+            var rShldrYn040 = NewMorphConfig("RShldrY-040");
+            var rShldrYp095 = NewMorphConfig("RShldrY+095");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    lShldrZp035,
+                    lShldrZn060,
+                    lShldrZn075,
+                    lShldrYn095,
+                    lShldrYp040,
+                    rShldrZn035,
+                    rShldrZp060,
+                    rShldrZp075,
+                    rShldrYn040,
+                    rShldrYp095,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Shoulders", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var lAngles = left.GetAnglesDegrees();
+                    // Note: Y Inverted
+                    lShldrYn095.Update(lAngles.y, 0, 95);
+                    lShldrYp040.Update(lAngles.y, 0, -40);
+                    // Remove -Z as Y approaches -40
+                    float zcorLeft = lAngles.z * -Utils.NormalizeFloat(lAngles.y, 0, -40);
+                    // Note: DAZ Z = VaM Z Inverted
+                    lShldrZp035.Update(lAngles.z, 0, -35);
+                    lShldrZn060.Update(lAngles.z + zcorLeft, 0, 60);
+                    lShldrZn075.Update(lAngles.z + zcorLeft, 60, 75);
+
+                    var rAngles = right.GetAnglesDegrees();
+                    // Note: Y probably Inverted
+                    rShldrYn040.Update(rAngles.y, 0, 40);
+                    rShldrYp095.Update(rAngles.y, 0, -95);
+                    // Remove +Z as Y approaches 40
+                    float zcorRight = rAngles.z * -Utils.NormalizeFloat(rAngles.y, 0, 40);
+                    // Note: DAZ Z = VaM Z Inverted
+                    rShldrZn035.Update(rAngles.z, 0, 35);
+                    rShldrZp060.Update(rAngles.z + zcorRight, 0, -60);
+                    rShldrZp075.Update(rAngles.z + zcorRight, -60, -75);
+                },
+            });
+        }
+
+        /* Thighs */
+        {
+            var left = GetBone("lThigh");
+            var lThighXp035 = NewMorphConfig("LThighX+035");
+            var lThighXn055 = NewMorphConfig("LThighX-055");
+            var lThighXn115 = NewMorphConfig("LThighX-115");
+            var lThighYp075 = NewMorphConfig("LThighY+075");
+            var lThighYn075 = NewMorphConfig("LThighY-075");
+            var lThighZp085 = NewMorphConfig("LThighZ+085");
+            var lThighZn015 = NewMorphConfig("LThighZ-015");
+
+            var right = GetBone("rThigh");
+            var rThighXp035 = NewMorphConfig("RThighX+035");
+            var rThighXn055 = NewMorphConfig("RThighX-055");
+            var rThighXn115 = NewMorphConfig("RThighX-115");
+            var rThighYn075 = NewMorphConfig("RThighY-075");
+            var rThighYp075 = NewMorphConfig("RThighY+075");
+            var rThighZn085 = NewMorphConfig("RThighZ-085");
+            var rThighZp015 = NewMorphConfig("RThighZ+015");
+
+            var cThighZp180 = NewMorphConfig("CThighsZ+180");
+            var cThighXn115 = NewMorphConfig("CThighsX-115");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    lThighXp035,
+                    lThighXn055,
+                    lThighXn115,
+                    lThighYp075,
+                    lThighYn075,
+                    lThighZp085,
+                    lThighZn015,
+                    rThighXp035,
+                    rThighXn055,
+                    rThighXn115,
+                    rThighYn075,
+                    rThighYp075,
+                    rThighZn085,
+                    rThighZp015,
+                    cThighZp180,
+                    cThighXn115,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Thighs", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var lAngles = left.GetAnglesDegrees();
+                    lThighXn115.Update(lAngles.x, -55, -115);
+                    lThighXn055.Update(lAngles.x, 0, -55);
+                    lThighXp035.Update(lAngles.x, 0, 35);
+
+                    // Note: DAZ Y = VAM Y Inverted
+                    lThighYn075.Update(lAngles.y, 0, 75);
+                    lThighYp075.Update(lAngles.y, 0, -75);
+
+                    // Note: DAZ Z = VAM Z Inverted
+                    lThighZn015.Update(lAngles.z, 0, 15);
+                    lThighZp085.Update(lAngles.z, 0, -85);
+
+                    var rAngles = right.GetAnglesDegrees();
+                    rThighXn115.Update(rAngles.x, -55, -115);
+                    rThighXn055.Update(rAngles.x, 0, -55);
+                    rThighXp035.Update(rAngles.x, 0, 35);
+
+                    // Note: DAZ Y = VAM Y Inverted
+                    rThighYn075.Update(rAngles.y, 0, 75);
+                    rThighYp075.Update(rAngles.y, 0, -75);
+
+                    // Note: DAZ Z = VAM Z Inverted
+                    rThighZn085.Update(rAngles.z, 0, 85);
+                    rThighZp015.Update(rAngles.z, 0, -15);
+
+                    float thighZSeparation = rAngles.z - lAngles.z;
+                    cThighZp180.Update(thighZSeparation, 0, 180);
+
+                    float thighXCombination = (lAngles.x + rAngles.x) / 2;
+                    cThighXn115.Update(thighXCombination, -55, -115);
+                },
+            });
+        }
+
+        /* Genitals */
+        {
+            var left = GetBone("lThigh");
+            var lThighZp085Gens = NewMorphConfig("LThighZ+085.gens");
+            // var lThighZn015gens = GetMorph("LThighZ-015.gens"); // unused
+
+            var right = GetBone("rThigh");
+            var rThighZn085Gens = NewMorphConfig("RThighZ-085.gens");
+
+            // var cThighZ180gens = GetMorph("CThighsZ180.gens"); // unused
+            var cThighZp180Gens = NewMorphConfig("CThighsZ+180.gens");
+            var cThighZn030Gens = NewMorphConfig("CThighsZ-030.gens");
+            var cThighXn115Gens = NewMorphConfig("CThighsX-115.gens");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    lThighZp085Gens,
+                    rThighZn085Gens,
+                    cThighZp180Gens,
+                    cThighZn030Gens,
+                    cThighXn115Gens,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Genitals", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var lAngles = left.GetAnglesDegrees();
+                    // Note: DAZ Z = VAM Z Inverted
+                    lThighZp085Gens.Update(lAngles.z, 0, -85);
+
+                    var rAngles = right.GetAnglesDegrees();
+                    // Note: DAZ Z = VAM Z Inverted
+                    rThighZn085Gens.Update(rAngles.z, 0, 85);
+
+                    float thighZSeparation = rAngles.z - lAngles.z;
+                    cThighZp180Gens.Update(thighZSeparation, 0, 180);
+                    cThighZn030Gens.Update(thighZSeparation, 0, -30);
+
+                    float thighXCombination = (lAngles.x + rAngles.x) / 2;
+                    cThighXn115Gens.Update(thighXCombination, -55, -115);
+                },
+            });
+        }
+
+        /* Pelvis */
+        {
+            var bone = GetBone("pelvis");
+            var pelvisXp030 = NewMorphConfig("TPelvisX+030");
+            var pelvisXn015 = NewMorphConfig("TPelvisX-015");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    pelvisXp030,
+                    pelvisXn015,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Pelvis", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var angles = bone.GetAnglesDegrees();
+                    pelvisXn015.Update(angles.x, 0, -15);
+                    pelvisXp030.Update(angles.x, 0, 30);
+                },
+            });
+        }
+
+        /* Abdomen */
+        {
+            var bone = GetBone("abdomen");
+            var abdomenXn020 = NewMorphConfig("TAbdomenX-020");
+            var abdomenXp030 = NewMorphConfig("TAbdomenX+030");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    abdomenXn020,
+                    abdomenXp030,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Abdomen", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var angles = bone.GetAnglesDegrees();
+                    abdomenXn020.Update(angles.x, 0, -20);
+                    abdomenXp030.Update(angles.x, 0, 30);
+                },
+            });
+        }
+
+        /* Abdomen2 */
+        {
+            var bone = GetBone("abdomen2");
+            var abdomen2Xn020 = NewMorphConfig("TAbdomen2X-020");
+            var abdomen2Xp030 = NewMorphConfig("TAbdomen2X+030");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    abdomen2Xn020,
+                    abdomen2Xp030,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Abdomen2", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var angles = bone.GetAnglesDegrees();
+                    abdomen2Xn020.Update(angles.x, 0, -20);
+                    abdomen2Xp030.Update(angles.x, 0, 30);
+                },
+            });
+        }
+
+        /* Chest */
+        {
+            var bone = GetBone("chest");
+            var chestXp020 = NewMorphConfig("TChestX+020");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    chestXp020,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Chest", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var angles = bone.GetAnglesDegrees();
+                    chestXp020.Update(angles.x, 0, 20);
+                },
+            });
+        }
+
+        /* Neck */
+        {
+            var bone = GetBone("neck");
+            var neckXn030 = NewMorphConfig("TNeckX-030");
+            var neckYp035 = NewMorphConfig("TNeckY+035");
+            var neckYn035 = NewMorphConfig("TNeckY-035");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    neckXn030,
+                    neckYp035,
+                    neckYn035,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Neck", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var angles = bone.GetAnglesDegrees();
+                    neckXn030.Update(angles.x, 0, -30);
+                    neckYp035.Update(angles.y, 0, -35);
+                    neckYn035.Update(angles.y, 0, 35);
+                },
+            });
+        }
+
+        /* Head */
+        {
+            var bone = GetBone("head");
+            var headXn045 = NewMorphConfig("THeadX-045");
+            var headXp035 = NewMorphConfig("THeadX+035");
+
+            _boneConfigs.Add(new BoneConfig
+            {
+                morphConfigs = new List<MorphConfig>
+                {
+                    headXn045,
+                    headXp035,
+                },
+                multiplierJsf = this.NewJSONStorableFloat("Head", 1, 0, 2),
+                driver = multiplier =>
+                {
+                    var angles = bone.GetAnglesDegrees();
+                    headXn045.Update(angles.x, 0, -45);
+                    headXp035.Update(angles.x, 0, 35);
+                },
+            });
+        }
+
+        foreach(var config in _boneConfigs)
+        {
+            config.SetGroupMultiplierReferences();
+        }
+    }
+
+    private static MorphConfig NewMorphConfig(string morphName) =>
+        new MorphConfig(morphName, new JSONStorableFloat($"{morphName}", 1, 0, 2));
 
     public void Update()
     {
@@ -532,17 +623,9 @@ public class JointCorrectEE : MVRScript
 
         try
         {
-            foreach(var driver in _drivers)
+            foreach(var config in _boneConfigs)
             {
-                driver.Invoke();
-            }
-
-            if(envIsDevelopment)
-            {
-                _mLog.Remove(0, _mLog.Length);
-                _rLog.Remove(0, _rLog.Length);
-                _morphOut.valNoCallback = _mLog.ToString();
-                _jointOut.valNoCallback = _rLog.ToString();
+                config.Update();
             }
         }
         catch(Exception e)
@@ -568,36 +651,8 @@ public class JointCorrectEE : MVRScript
         _line.SetPosition(4, position + (rotation * Vector3.forward).normalized * length);
     }
 
-    private void SetMorph(MorphConfig morphConfig, float value, float starting, float ending)
-    {
-        value = NormalizeFloat(value, starting, ending);
-        if(envIsDevelopment)
-        {
-            _mLog.AppendLine($"{morphConfig.morph.displayName} <- {value:##0.00}");
-        }
-
-        morphConfig.morph.morphValue = morphConfig.multiplier * value;
-    }
-
-    private MorphConfig GetMorph(string morphName)
-    {
-        var config = new MorphConfig(morphName, 1);
-        _morphConfigs.Add(config);
-        return config;
-    }
-
-    private Transform GetJoint(string jointName) =>
-        containingAtom.GetStorableByID(jointName).transform;
-
-    private void PrintBone(DAZBone bone)
-    {
-        var angles = bone.GetAnglesDegrees();
-        _rLog.AppendLine($"{angles.x: 000;-000}, {angles.y: 000;-000}, {angles.z: 000;-000} {bone.name} {bone.rotationOrder}");
-    }
-
-    /* TODO InverseLerp? */
-    private static float NormalizeFloat(float value, float start, float end) =>
-        Mathf.Clamp((value - start) / (end - start), 0, 1);
+    private DAZBone GetBone(string jointName) =>
+        containingAtom.GetStorableByID(jointName).transform.GetComponent<DAZBone>();
 
     public override void RestoreFromJSON(
         JSONClass jsonClass,
@@ -657,9 +712,9 @@ public class JointCorrectEE : MVRScript
     {
         try
         {
-            foreach(var morphConfig in _morphConfigs)
+            foreach(var config in _boneConfigs)
             {
-                morphConfig.morph.morphValue = 0;
+                config.Reset();
             }
         }
         catch(Exception e)
@@ -679,6 +734,7 @@ public class JointCorrectEE : MVRScript
     {
         try
         {
+            person = null;
             morphsControlUI = null;
         }
         catch(Exception e)
