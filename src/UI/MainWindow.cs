@@ -33,7 +33,7 @@ public class MainWindow : WindowBase
             bool rightSide = i > 6;
             var slider = jointCorrectEE.CreateSlider(storable, rightSide);
             slider.valueFormat = "F3";
-            slider.label = $"{storable.name} Multiplier";
+            slider.label = storable.name;
             elements[storable.name] = slider;
         }
     }

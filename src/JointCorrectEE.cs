@@ -97,7 +97,20 @@ public class JointCorrectEE : MVRScript
 
     public void InitMorphs()
     {
-        boneConfigs = new List<BoneConfig>();
+        BoneConfig collarsConfig = null;
+        BoneConfig feetConfig = null;
+        BoneConfig forearmsConfig = null;
+        BoneConfig handsConfig = null;
+        BoneConfig shinsConfig = null;
+        BoneConfig shouldersConfig = null;
+        BoneConfig thighsConfig = null;
+        BoneConfig genitalsConfig = null;
+        BoneConfig pelvisConfig = null;
+        BoneConfig abdomenConfig = null;
+        BoneConfig abdomen2Config = null;
+        BoneConfig chestConfig = null;
+        BoneConfig neckConfig = null;
+        BoneConfig headConfig = null;
 
         /* Collars */
         {
@@ -117,7 +130,7 @@ public class JointCorrectEE : MVRScript
             var rCollarZn050 = new MorphConfig("RCollarZ-050");
             var rCollarZp015 = new MorphConfig("RCollarZ+015");
 
-            boneConfigs.Add(new BoneConfig
+            collarsConfig = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -162,7 +175,7 @@ public class JointCorrectEE : MVRScript
                     rCollarZn050.Update(rAngles.z, 0, 50);
                     rCollarZp015.Update(rAngles.z, 0, -15);
                 },
-            });
+            };
         }
 
         /* Feet */
@@ -175,7 +188,7 @@ public class JointCorrectEE : MVRScript
             var rFootXp065 = new MorphConfig("RFootX+065");
             var rFootXn040 = new MorphConfig("RFootX-040");
 
-            boneConfigs.Add(new BoneConfig
+            feetConfig = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -195,7 +208,7 @@ public class JointCorrectEE : MVRScript
                     rFootXn040.Update(rAngles.x, 0, -40);
                     rFootXp065.Update(rAngles.x, 0, 65);
                 },
-            });
+            };
         }
 
         /* Forearms */
@@ -208,7 +221,7 @@ public class JointCorrectEE : MVRScript
             var rForearmYp100 = new MorphConfig("RForearmY+100");
             var rForearmYp130 = new MorphConfig("RForearmY+130");
 
-            boneConfigs.Add(new BoneConfig
+            forearmsConfig = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -230,7 +243,7 @@ public class JointCorrectEE : MVRScript
                     rForearmYp100.Update(rAngles.y, 0, -100);
                     rForearmYp130.Update(rAngles.y, -100, -130);
                 },
-            });
+            };
         }
 
         /* Hands */
@@ -241,7 +254,7 @@ public class JointCorrectEE : MVRScript
             var right = GetBone("rHand");
             var rHandZn080 = new MorphConfig("RHandZ-080");
 
-            boneConfigs.Add(new BoneConfig
+            handsConfig = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -257,7 +270,7 @@ public class JointCorrectEE : MVRScript
                     var rAngles = right.GetAnglesDegrees();
                     rHandZn080.Update(rAngles.z, 0, 80);
                 },
-            });
+            };
         }
 
         /* Shins */
@@ -270,7 +283,7 @@ public class JointCorrectEE : MVRScript
             var rShinXp085 = new MorphConfig("RShinX+085");
             var rShinXp140 = new MorphConfig("RShinX+140");
 
-            boneConfigs.Add(new BoneConfig
+            shinsConfig = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -290,7 +303,7 @@ public class JointCorrectEE : MVRScript
                     rShinXp085.Update(rAngles.x, 0, 85);
                     rShinXp140.Update(rAngles.x, 85, 140);
                 },
-            });
+            };
         }
 
         /* Shoulders */
@@ -309,7 +322,7 @@ public class JointCorrectEE : MVRScript
             var rShldrYn040 = new MorphConfig("RShldrY-040");
             var rShldrYp095 = new MorphConfig("RShldrY+095");
 
-            boneConfigs.Add(new BoneConfig
+            shouldersConfig = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -349,7 +362,7 @@ public class JointCorrectEE : MVRScript
                     rShldrZp060.Update(rAngles.z + zcorRight, 0, -60);
                     rShldrZp075.Update(rAngles.z + zcorRight, -60, -75);
                 },
-            });
+            };
         }
 
         /* Thighs */
@@ -375,7 +388,7 @@ public class JointCorrectEE : MVRScript
             var cThighZp180 = new MorphConfig("CThighsZ+180");
             var cThighXn115 = new MorphConfig("CThighsX-115");
 
-            boneConfigs.Add(new BoneConfig
+            thighsConfig = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -431,7 +444,7 @@ public class JointCorrectEE : MVRScript
                     float thighXCombination = (lAngles.x + rAngles.x) / 2;
                     cThighXn115.Update(thighXCombination, -55, -115);
                 },
-            });
+            };
         }
 
         /* Genitals */
@@ -448,7 +461,7 @@ public class JointCorrectEE : MVRScript
             var cThighZn030Gens = new MorphConfig("CThighsZ-030.gens");
             var cThighXn115Gens = new MorphConfig("CThighsX-115.gens");
 
-            boneConfigs.Add(new BoneConfig
+            genitalsConfig = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -476,7 +489,7 @@ public class JointCorrectEE : MVRScript
                     float thighXCombination = (lAngles.x + rAngles.x) / 2;
                     cThighXn115Gens.Update(thighXCombination, -55, -115);
                 },
-            });
+            };
         }
 
         /* Pelvis */
@@ -485,7 +498,7 @@ public class JointCorrectEE : MVRScript
             var pelvisXp030 = new MorphConfig("TPelvisX+030");
             var pelvisXn015 = new MorphConfig("TPelvisX-015");
 
-            boneConfigs.Add(new BoneConfig
+            pelvisConfig = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -499,7 +512,7 @@ public class JointCorrectEE : MVRScript
                     pelvisXn015.Update(angles.x, 0, -15);
                     pelvisXp030.Update(angles.x, 0, 30);
                 },
-            });
+            };
         }
 
         /* Abdomen */
@@ -508,7 +521,7 @@ public class JointCorrectEE : MVRScript
             var abdomenXn020 = new MorphConfig("TAbdomenX-020");
             var abdomenXp030 = new MorphConfig("TAbdomenX+030");
 
-            boneConfigs.Add(new BoneConfig
+            abdomenConfig = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -522,7 +535,7 @@ public class JointCorrectEE : MVRScript
                     abdomenXn020.Update(angles.x, 0, -20);
                     abdomenXp030.Update(angles.x, 0, 30);
                 },
-            });
+            };
         }
 
         /* Abdomen2 */
@@ -531,7 +544,7 @@ public class JointCorrectEE : MVRScript
             var abdomen2Xn020 = new MorphConfig("TAbdomen2X-020");
             var abdomen2Xp030 = new MorphConfig("TAbdomen2X+030");
 
-            boneConfigs.Add(new BoneConfig
+            abdomen2Config = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -545,7 +558,7 @@ public class JointCorrectEE : MVRScript
                     abdomen2Xn020.Update(angles.x, 0, -20);
                     abdomen2Xp030.Update(angles.x, 0, 30);
                 },
-            });
+            };
         }
 
         /* Chest */
@@ -553,7 +566,7 @@ public class JointCorrectEE : MVRScript
             var bone = GetBone("chest");
             var chestXp020 = new MorphConfig("TChestX+020");
 
-            boneConfigs.Add(new BoneConfig
+            chestConfig = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -565,7 +578,7 @@ public class JointCorrectEE : MVRScript
                     var angles = bone.GetAnglesDegrees();
                     chestXp020.Update(angles.x, 0, 20);
                 },
-            });
+            };
         }
 
         /* Neck */
@@ -575,7 +588,7 @@ public class JointCorrectEE : MVRScript
             var neckYp035 = new MorphConfig("TNeckY+035");
             var neckYn035 = new MorphConfig("TNeckY-035");
 
-            boneConfigs.Add(new BoneConfig
+            neckConfig = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -591,7 +604,7 @@ public class JointCorrectEE : MVRScript
                     neckYp035.Update(angles.y, 0, -35);
                     neckYn035.Update(angles.y, 0, 35);
                 },
-            });
+            };
         }
 
         /* Head */
@@ -600,7 +613,7 @@ public class JointCorrectEE : MVRScript
             var headXn045 = new MorphConfig("THeadX-045");
             var headXp035 = new MorphConfig("THeadX+035");
 
-            boneConfigs.Add(new BoneConfig
+            headConfig = new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -614,8 +627,27 @@ public class JointCorrectEE : MVRScript
                     headXn045.Update(angles.x, 0, -45);
                     headXp035.Update(angles.x, 0, 35);
                 },
-            });
+            };
         }
+
+        /* Order matters for UI */
+        boneConfigs = new List<BoneConfig>
+        {
+            headConfig,
+            neckConfig,
+            collarsConfig,
+            chestConfig,
+            shouldersConfig,
+            forearmsConfig,
+            handsConfig,
+            abdomenConfig,
+            abdomen2Config,
+            pelvisConfig,
+            genitalsConfig,
+            thighsConfig,
+            shinsConfig,
+            feetConfig,
+        };
 
         foreach(var config in boneConfigs)
         {
