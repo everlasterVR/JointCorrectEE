@@ -1,0 +1,26 @@
+{
+   "licenseType": "CC BY-NC-SA",
+   "creatorName": "everlaster",
+   "packageName": "JointCorrectEE",
+   "standardReferenceVersionOption": "Latest",
+   "scriptReferenceVersionOption": "Exact",
+   "description": "v0.0.0. ",
+   "credits": "",
+   "instructions": "",
+   "promotionalLink": "",
+   "programVersion": "1.20.77.9",
+   "contentList": [
+      "Custom/Scripts/everlaster/JointCorrectEE/JointCorrectEE.cslist",
+      "Custom/Scripts/everlaster/JointCorrectEE/src"
+   ],
+   "dependencies": {
+      "FallenDancer.JointCorrect.11": {
+         "licenseType": "CC BY-NC-SA",
+         "dependencies": {
+         }
+      }
+   },
+   "customOptions": {
+      "preloadMorphs": "false"
+   }
+}
