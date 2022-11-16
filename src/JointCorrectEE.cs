@@ -1,14 +1,36 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using SimpleJSON;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class JointCorrectEE : MVRScript
 {
+    public static JointCorrectEE jointCorrectEE { get; private set; }
     public const string VERSION = "0.0.0";
     public static bool envIsDevelopment => VERSION.StartsWith("0.");
+
+    private UnityEventsListener _pluginUIEventsListener;
+
+    public override void InitUI()
+    {
+        base.InitUI();
+        if(UITransform == null || _pluginUIEventsListener != null)
+        {
+            return;
+        }
+
+        _pluginUIEventsListener = UITransform.gameObject.AddComponent<UnityEventsListener>();
+        if(_pluginUIEventsListener != null)
+        {
+            _pluginUIEventsListener.onEnable.AddListener(() =>
+            {
+                var background = rightUIContent.parent.parent.parent.transform.GetComponent<Image>();
+                background.color = new Color(0.85f, 0.85f, 0.85f);
+            });
+        }
+    }
 
     private bool _initialized;
 
@@ -31,6 +53,7 @@ public class JointCorrectEE : MVRScript
                 return;
             }
 
+            jointCorrectEE = this;
             StartCoroutine(DeferInit());
         }
         catch(Exception e)
@@ -42,11 +65,10 @@ public class JointCorrectEE : MVRScript
     private DAZCharacterSelector _geometry;
     private static Atom person { get; set; }
     public static GenerateDAZMorphsControlUI morphsControlUI { get; private set; }
+    public static List<BoneConfig> boneConfigs { get; private set; }
+    public JSONStorableBool locked { get; private set; }
 
-    private List<BoneConfig> _boneConfigs;
-    private JSONStorableBool _locked;
-
-    private LineRenderer _line;
+    private IWindow _mainWindow;
 
     private IEnumerator DeferInit()
     {
@@ -60,52 +82,42 @@ public class JointCorrectEE : MVRScript
         _geometry = (DAZCharacterSelector) person.GetStorableByID("geometry");
         morphsControlUI = _geometry.morphsControlUI;
 
-        /* TODO UI */
-        _locked = this.NewJSONStorableBool("Lock", false);
-        CreateToggle(_locked, true);
-
-        if(envIsDevelopment)
-        {
-            _line = gameObject.GetComponent<LineRenderer>();
-            if(_line == null)
-            {
-                _line = gameObject.AddComponent<LineRenderer>();
-            }
-
-            _line.positionCount = 5;
-            _line.startColor = Color.blue;
-            _line.endColor = Color.blue;
-            _line.startWidth = 0.04f;
-            _line.endWidth = 0.00f;
-        }
+        locked = this.NewJSONStorableBool("Lock", false);
 
         InitMorphs();
+
+        _mainWindow = new MainWindow();
+        NavigateToMainWindow();
+
         _initialized = true;
     }
 
+    public void NavigateToMainWindow() => NavigateToWindow(_mainWindow);
+    private static void NavigateToWindow(IWindow window) => window.Rebuild();
+
     public void InitMorphs()
     {
-        _boneConfigs = new List<BoneConfig>();
+        boneConfigs = new List<BoneConfig>();
 
         /* Collars */
         {
             var left = GetBone("lCollar");
-            var lCollarXn025 = NewMorphConfig("LCollarX-025");
-            var lCollarXp015 = NewMorphConfig("LCollarX+015");
-            var lCollarYn026 = NewMorphConfig("LCollarY-026");
-            var lCollarYp017 = NewMorphConfig("LCollarY+017");
-            var lCollarZn015 = NewMorphConfig("LCollarZ-015");
-            var lCollarZp050 = NewMorphConfig("LCollarZ+050");
+            var lCollarXn025 = new MorphConfig("LCollarX-025");
+            var lCollarXp015 = new MorphConfig("LCollarX+015");
+            var lCollarYn026 = new MorphConfig("LCollarY-026");
+            var lCollarYp017 = new MorphConfig("LCollarY+017");
+            var lCollarZn015 = new MorphConfig("LCollarZ-015");
+            var lCollarZp050 = new MorphConfig("LCollarZ+050");
 
             var right = GetBone("rCollar");
-            var rCollarXn025 = NewMorphConfig("RCollarX-025");
-            var rCollarXp015 = NewMorphConfig("RCollarX+015");
-            var rCollarYn017 = NewMorphConfig("RCollarY-017");
-            var rCollarYp026 = NewMorphConfig("RCollarY+026");
-            var rCollarZn050 = NewMorphConfig("RCollarZ-050");
-            var rCollarZp015 = NewMorphConfig("RCollarZ+015");
+            var rCollarXn025 = new MorphConfig("RCollarX-025");
+            var rCollarXp015 = new MorphConfig("RCollarX+015");
+            var rCollarYn017 = new MorphConfig("RCollarY-017");
+            var rCollarYp026 = new MorphConfig("RCollarY+026");
+            var rCollarZn050 = new MorphConfig("RCollarZ-050");
+            var rCollarZp015 = new MorphConfig("RCollarZ+015");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -156,14 +168,14 @@ public class JointCorrectEE : MVRScript
         /* Feet */
         {
             var left = GetBone("lFoot");
-            var lFootXp065 = NewMorphConfig("LFootX+065");
-            var lFootXn040 = NewMorphConfig("LFootX-040");
+            var lFootXp065 = new MorphConfig("LFootX+065");
+            var lFootXn040 = new MorphConfig("LFootX-040");
 
             var right = GetBone("rFoot");
-            var rFootXp065 = NewMorphConfig("RFootX+065");
-            var rFootXn040 = NewMorphConfig("RFootX-040");
+            var rFootXp065 = new MorphConfig("RFootX+065");
+            var rFootXn040 = new MorphConfig("RFootX-040");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -189,14 +201,14 @@ public class JointCorrectEE : MVRScript
         /* Forearms */
         {
             var lForearmBone = GetBone("lForeArm");
-            var lForearmYn100 = NewMorphConfig("LForearmY-100");
-            var lForearmYn130 = NewMorphConfig("LForearmY-130");
+            var lForearmYn100 = new MorphConfig("LForearmY-100");
+            var lForearmYn130 = new MorphConfig("LForearmY-130");
 
             var rForearmBone = GetBone("rForeArm");
-            var rForearmYp100 = NewMorphConfig("RForearmY+100");
-            var rForearmYp130 = NewMorphConfig("RForearmY+130");
+            var rForearmYp100 = new MorphConfig("RForearmY+100");
+            var rForearmYp130 = new MorphConfig("RForearmY+130");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -224,12 +236,12 @@ public class JointCorrectEE : MVRScript
         /* Hands */
         {
             var left = GetBone("lHand");
-            var lHandZp080 = NewMorphConfig("LHandZ+080");
+            var lHandZp080 = new MorphConfig("LHandZ+080");
 
             var right = GetBone("rHand");
-            var rHandZn080 = NewMorphConfig("RHandZ-080");
+            var rHandZn080 = new MorphConfig("RHandZ-080");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -251,14 +263,14 @@ public class JointCorrectEE : MVRScript
         /* Shins */
         {
             var left = GetBone("lShin");
-            var lShinXp085 = NewMorphConfig("LShinX+085");
-            var lShinXp140 = NewMorphConfig("LShinX+140");
+            var lShinXp085 = new MorphConfig("LShinX+085");
+            var lShinXp140 = new MorphConfig("LShinX+140");
 
             var right = GetBone("rShin");
-            var rShinXp085 = NewMorphConfig("RShinX+085");
-            var rShinXp140 = NewMorphConfig("RShinX+140");
+            var rShinXp085 = new MorphConfig("RShinX+085");
+            var rShinXp140 = new MorphConfig("RShinX+140");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -284,20 +296,20 @@ public class JointCorrectEE : MVRScript
         /* Shoulders */
         {
             var left = GetBone("lShldr");
-            var lShldrZp035 = NewMorphConfig("LShldrZ+035");
-            var lShldrZn060 = NewMorphConfig("LShldrZ-060");
-            var lShldrZn075 = NewMorphConfig("LShldrZ-075");
-            var lShldrYn095 = NewMorphConfig("LShldrY-095");
-            var lShldrYp040 = NewMorphConfig("LShldrY+040");
+            var lShldrZp035 = new MorphConfig("LShldrZ+035");
+            var lShldrZn060 = new MorphConfig("LShldrZ-060");
+            var lShldrZn075 = new MorphConfig("LShldrZ-075");
+            var lShldrYn095 = new MorphConfig("LShldrY-095");
+            var lShldrYp040 = new MorphConfig("LShldrY+040");
 
             var right = GetBone("rShldr");
-            var rShldrZn035 = NewMorphConfig("RShldrZ-035");
-            var rShldrZp060 = NewMorphConfig("RShldrZ+060");
-            var rShldrZp075 = NewMorphConfig("RShldrZ+075");
-            var rShldrYn040 = NewMorphConfig("RShldrY-040");
-            var rShldrYp095 = NewMorphConfig("RShldrY+095");
+            var rShldrZn035 = new MorphConfig("RShldrZ-035");
+            var rShldrZp060 = new MorphConfig("RShldrZ+060");
+            var rShldrZp075 = new MorphConfig("RShldrZ+075");
+            var rShldrYn040 = new MorphConfig("RShldrY-040");
+            var rShldrYp095 = new MorphConfig("RShldrY+095");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -343,27 +355,27 @@ public class JointCorrectEE : MVRScript
         /* Thighs */
         {
             var left = GetBone("lThigh");
-            var lThighXp035 = NewMorphConfig("LThighX+035");
-            var lThighXn055 = NewMorphConfig("LThighX-055");
-            var lThighXn115 = NewMorphConfig("LThighX-115");
-            var lThighYp075 = NewMorphConfig("LThighY+075");
-            var lThighYn075 = NewMorphConfig("LThighY-075");
-            var lThighZp085 = NewMorphConfig("LThighZ+085");
-            var lThighZn015 = NewMorphConfig("LThighZ-015");
+            var lThighXp035 = new MorphConfig("LThighX+035");
+            var lThighXn055 = new MorphConfig("LThighX-055");
+            var lThighXn115 = new MorphConfig("LThighX-115");
+            var lThighYp075 = new MorphConfig("LThighY+075");
+            var lThighYn075 = new MorphConfig("LThighY-075");
+            var lThighZp085 = new MorphConfig("LThighZ+085");
+            var lThighZn015 = new MorphConfig("LThighZ-015");
 
             var right = GetBone("rThigh");
-            var rThighXp035 = NewMorphConfig("RThighX+035");
-            var rThighXn055 = NewMorphConfig("RThighX-055");
-            var rThighXn115 = NewMorphConfig("RThighX-115");
-            var rThighYn075 = NewMorphConfig("RThighY-075");
-            var rThighYp075 = NewMorphConfig("RThighY+075");
-            var rThighZn085 = NewMorphConfig("RThighZ-085");
-            var rThighZp015 = NewMorphConfig("RThighZ+015");
+            var rThighXp035 = new MorphConfig("RThighX+035");
+            var rThighXn055 = new MorphConfig("RThighX-055");
+            var rThighXn115 = new MorphConfig("RThighX-115");
+            var rThighYn075 = new MorphConfig("RThighY-075");
+            var rThighYp075 = new MorphConfig("RThighY+075");
+            var rThighZn085 = new MorphConfig("RThighZ-085");
+            var rThighZp015 = new MorphConfig("RThighZ+015");
 
-            var cThighZp180 = NewMorphConfig("CThighsZ+180");
-            var cThighXn115 = NewMorphConfig("CThighsX-115");
+            var cThighZp180 = new MorphConfig("CThighsZ+180");
+            var cThighXn115 = new MorphConfig("CThighsX-115");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -425,18 +437,18 @@ public class JointCorrectEE : MVRScript
         /* Genitals */
         {
             var left = GetBone("lThigh");
-            var lThighZp085Gens = NewMorphConfig("LThighZ+085.gens");
+            var lThighZp085Gens = new MorphConfig("LThighZ+085.gens");
             // var lThighZn015gens = GetMorph("LThighZ-015.gens"); // unused
 
             var right = GetBone("rThigh");
-            var rThighZn085Gens = NewMorphConfig("RThighZ-085.gens");
+            var rThighZn085Gens = new MorphConfig("RThighZ-085.gens");
 
             // var cThighZ180gens = GetMorph("CThighsZ180.gens"); // unused
-            var cThighZp180Gens = NewMorphConfig("CThighsZ+180.gens");
-            var cThighZn030Gens = NewMorphConfig("CThighsZ-030.gens");
-            var cThighXn115Gens = NewMorphConfig("CThighsX-115.gens");
+            var cThighZp180Gens = new MorphConfig("CThighsZ+180.gens");
+            var cThighZn030Gens = new MorphConfig("CThighsZ-030.gens");
+            var cThighXn115Gens = new MorphConfig("CThighsX-115.gens");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -470,10 +482,10 @@ public class JointCorrectEE : MVRScript
         /* Pelvis */
         {
             var bone = GetBone("pelvis");
-            var pelvisXp030 = NewMorphConfig("TPelvisX+030");
-            var pelvisXn015 = NewMorphConfig("TPelvisX-015");
+            var pelvisXp030 = new MorphConfig("TPelvisX+030");
+            var pelvisXn015 = new MorphConfig("TPelvisX-015");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -493,10 +505,10 @@ public class JointCorrectEE : MVRScript
         /* Abdomen */
         {
             var bone = GetBone("abdomen");
-            var abdomenXn020 = NewMorphConfig("TAbdomenX-020");
-            var abdomenXp030 = NewMorphConfig("TAbdomenX+030");
+            var abdomenXn020 = new MorphConfig("TAbdomenX-020");
+            var abdomenXp030 = new MorphConfig("TAbdomenX+030");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -516,10 +528,10 @@ public class JointCorrectEE : MVRScript
         /* Abdomen2 */
         {
             var bone = GetBone("abdomen2");
-            var abdomen2Xn020 = NewMorphConfig("TAbdomen2X-020");
-            var abdomen2Xp030 = NewMorphConfig("TAbdomen2X+030");
+            var abdomen2Xn020 = new MorphConfig("TAbdomen2X-020");
+            var abdomen2Xp030 = new MorphConfig("TAbdomen2X+030");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -539,9 +551,9 @@ public class JointCorrectEE : MVRScript
         /* Chest */
         {
             var bone = GetBone("chest");
-            var chestXp020 = NewMorphConfig("TChestX+020");
+            var chestXp020 = new MorphConfig("TChestX+020");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -559,11 +571,11 @@ public class JointCorrectEE : MVRScript
         /* Neck */
         {
             var bone = GetBone("neck");
-            var neckXn030 = NewMorphConfig("TNeckX-030");
-            var neckYp035 = NewMorphConfig("TNeckY+035");
-            var neckYn035 = NewMorphConfig("TNeckY-035");
+            var neckXn030 = new MorphConfig("TNeckX-030");
+            var neckYp035 = new MorphConfig("TNeckY+035");
+            var neckYn035 = new MorphConfig("TNeckY-035");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -585,10 +597,10 @@ public class JointCorrectEE : MVRScript
         /* Head */
         {
             var bone = GetBone("head");
-            var headXn045 = NewMorphConfig("THeadX-045");
-            var headXp035 = NewMorphConfig("THeadX+035");
+            var headXn045 = new MorphConfig("THeadX-045");
+            var headXp035 = new MorphConfig("THeadX+035");
 
-            _boneConfigs.Add(new BoneConfig
+            boneConfigs.Add(new BoneConfig
             {
                 morphConfigs = new List<MorphConfig>
                 {
@@ -605,25 +617,22 @@ public class JointCorrectEE : MVRScript
             });
         }
 
-        foreach(var config in _boneConfigs)
+        foreach(var config in boneConfigs)
         {
             config.SetGroupMultiplierReferences();
         }
     }
 
-    private static MorphConfig NewMorphConfig(string morphName) =>
-        new MorphConfig(morphName, new JSONStorableFloat($"{morphName}", 1, 0, 2));
-
     public void Update()
     {
-        if(!_initialized || _locked.val)
+        if(!_initialized || locked.val)
         {
             return;
         }
 
         try
         {
-            foreach(var config in _boneConfigs)
+            foreach(var config in boneConfigs)
             {
                 config.Update();
             }
@@ -632,23 +641,6 @@ public class JointCorrectEE : MVRScript
         {
             Utils.LogError($"Update: {e}");
         }
-    }
-
-    // ReSharper disable once UnusedMember.Local
-    private void DrawAxes(Quaternion rotation, Vector3 position)
-    {
-        const float length = 0.25f;
-
-        _line.positionCount = 5;
-
-        _line.startColor = Color.green;
-        _line.endColor = Color.blue;
-
-        _line.SetPosition(0, position + (rotation * Vector3.up).normalized * length);
-        _line.SetPosition(1, position);
-        _line.SetPosition(2, position + (rotation * Vector3.right).normalized * length);
-        _line.SetPosition(3, position);
-        _line.SetPosition(4, position + (rotation * Vector3.forward).normalized * length);
     }
 
     private DAZBone GetBone(string jointName) =>
@@ -712,7 +704,7 @@ public class JointCorrectEE : MVRScript
     {
         try
         {
-            foreach(var config in _boneConfigs)
+            foreach(var config in boneConfigs)
             {
                 config.Reset();
             }
@@ -735,7 +727,9 @@ public class JointCorrectEE : MVRScript
         try
         {
             person = null;
+            boneConfigs = null;
             morphsControlUI = null;
+            jointCorrectEE = null;
         }
         catch(Exception e)
         {

@@ -1,5 +1,10 @@
+src\Components\UnityEventsListener.cs
 src\Extensions\AtomExtensions.cs
 src\Extensions\MVRScriptExtensions.cs
+src\Extensions\StringExtensions.cs
+src\UI\IWindow.cs
+src\UI\MainWindow.cs
+src\UI\WindowBase.cs
 src\BoneConfig.cs
 src\JointCorrectEE.cs
 src\MorphConfig.cs
