@@ -1,6 +1,6 @@
 // ReSharper disable UnusedMember.Global
 
-public static class MVRScriptExtension
+public static class MVRScriptExtensions
 {
     public static JSONStorableString NewJSONStorableString(
         this MVRScript script,
