@@ -1,4 +1,5 @@
 ﻿// ReSharper disable UnusedMember.Global
+using System.Text.RegularExpressions;
 using UnityEngine;
 using static JointCorrectEE;
 
@@ -35,5 +36,12 @@ public static class Utils
         }
 
         return dazMorph;
+    }
+
+    public static bool PluginIsDuplicate(Atom atom, string storeId)
+    {
+        var regex = new Regex(@"^plugin#\d+_JointCorrectEE", RegexOptions.Compiled);
+        var storables = atom.FindStorablesByRegexMatch(regex);
+        return storables.Exists(storable => storable.storeId != storeId);
     }
 }

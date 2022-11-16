@@ -97,6 +97,13 @@ public class JointCorrectEE : MVRScript
                 Utils.LogError($"Add to Person atom, not {containingAtom.type}");
             }
 
+            if(Utils.PluginIsDuplicate(containingAtom, storeId))
+            {
+                Utils.LogError($"Person already has an instance of {nameof(JointCorrectEE)}.");
+                enabled = false;
+                return;
+            }
+
             StartCoroutine(DeferInit());
         }
         catch(Exception e)
