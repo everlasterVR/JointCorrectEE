@@ -6,7 +6,7 @@ public interface IWindow
 
     IWindow GetActiveNestedWindow();
 
-    void Rebuild();
+    void Build();
 
     void OnReturn();
 

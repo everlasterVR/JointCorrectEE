@@ -82,6 +82,7 @@
     <Compile Include="src\Extensions\AtomExtensions.cs" />
     <Compile Include="src\Extensions\MVRScriptExtensions.cs" />
     <Compile Include="src\Extensions\StringExtensions.cs" />
+    <Compile Include="src\Extensions\UIDynamicExtensions.cs" />
     <Compile Include="src\JointCorrectEE.cs" />
     <Compile Include="src\MorphConfig.cs" />
     <Compile Include="src\UI\IWindow.cs" />

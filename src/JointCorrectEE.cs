@@ -28,6 +28,7 @@ public class JointCorrectEE : MVRScript
             {
                 var background = rightUIContent.parent.parent.parent.transform.GetComponent<Image>();
                 background.color = new Color(0.85f, 0.85f, 0.85f);
+                (_mainWindow as MainWindow)?.UpdateGenitalsSlider();
             });
         }
     }
@@ -62,9 +63,8 @@ public class JointCorrectEE : MVRScript
         }
     }
 
-    private static Atom person { get; set; }
-    private DAZCharacterSelector _geometry;
-    public static bool personIsFemale { get; private set; }
+    public static Atom person { get; private set; }
+    public static DAZCharacterSelector geometry { get; private set; }
     public static GenerateDAZMorphsControlUI morphsControlUI { get; private set; }
     public static List<BoneConfig> boneConfigs { get; private set; }
 
@@ -79,23 +79,25 @@ public class JointCorrectEE : MVRScript
         }
 
         person = containingAtom;
-        _geometry = (DAZCharacterSelector) person.GetStorableByID("geometry");
-        personIsFemale = !_geometry.selectedCharacter.isMale;
-        morphsControlUI = personIsFemale ? _geometry.morphsControlUI : _geometry.morphsControlUIOtherGender;
-
+        geometry = (DAZCharacterSelector) person.GetStorableByID("geometry");
         InitMorphs();
 
         _mainWindow = new MainWindow();
-        NavigateToMainWindow();
+        _mainWindow.Build();
 
         _initialized = true;
     }
 
-    public void NavigateToMainWindow() => NavigateToWindow(_mainWindow);
-    private static void NavigateToWindow(IWindow window) => window.Rebuild();
-
-    public void InitMorphs()
+    public void RebuildMainWindow()
     {
+        _mainWindow.Clear();
+        _mainWindow.Build();
+    }
+
+    private void InitMorphs()
+    {
+        morphsControlUI = !geometry.selectedCharacter.isMale ? geometry.morphsControlUI : geometry.morphsControlUIOtherGender;
+
         BoneConfig collarsConfig;
         BoneConfig feetConfig;
         BoneConfig forearmsConfig;
@@ -154,12 +156,12 @@ public class JointCorrectEE : MVRScript
                     lCollarXp015.Update(lAngles.x, 0, 15);
 
                     // Note: Y Inverted
-                    lCollarYn026.Update(lAngles.y, 0, 26);
+                    lCollarYn026.Update(lAngles.y, 0, 26); // problematic
                     lCollarYp017.Update(lAngles.y, 0, -17);
 
                     // Note: Rotation order not honored, Z Inverted
                     lCollarZn015.Update(lAngles.z, 0, 15);
-                    lCollarZp050.Update(lAngles.z, 0, -50);
+                    lCollarZp050.Update(lAngles.z, 0, -50); // problematic
 
                     var rAngles = right.GetAnglesDegrees();
                     // Note: Rotation order not honored
@@ -168,10 +170,10 @@ public class JointCorrectEE : MVRScript
 
                     // Note: Y Inverted
                     rCollarYn017.Update(rAngles.y, 0, 17);
-                    rCollarYp026.Update(rAngles.y, 0, -26);
+                    rCollarYp026.Update(rAngles.y, 0, -26); // problematic
 
                     // Note: Rotation order not honored, Z Inverted
-                    rCollarZn050.Update(rAngles.z, 0, 50);
+                    rCollarZn050.Update(rAngles.z, 0, 50); // problematic
                     rCollarZp015.Update(rAngles.z, 0, -15);
                 },
             };
@@ -674,8 +676,8 @@ public class JointCorrectEE : MVRScript
         }
     }
 
-    private DAZBone GetBone(string jointName) =>
-        containingAtom.GetStorableByID(jointName).transform.GetComponent<DAZBone>();
+    private static DAZBone GetBone(string jointName) =>
+        person.GetStorableByID(jointName).transform.GetComponent<DAZBone>();
 
     public override void RestoreFromJSON(
         JSONClass jsonClass,
@@ -758,8 +760,9 @@ public class JointCorrectEE : MVRScript
         try
         {
             person = null;
-            boneConfigs = null;
+            geometry = null;
             morphsControlUI = null;
+            boneConfigs = null;
             jointCorrectEE = null;
         }
         catch(Exception e)

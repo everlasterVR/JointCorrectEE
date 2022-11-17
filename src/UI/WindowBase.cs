@@ -57,11 +57,11 @@ public class WindowBase : IWindow
 
     #region Life cycle
 
-    public void Rebuild()
+    public void Build()
     {
         if(activeNestedWindow != null)
         {
-            activeNestedWindow.Rebuild();
+            activeNestedWindow.Build();
         }
         else
         {

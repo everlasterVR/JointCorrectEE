@@ -24,6 +24,7 @@ public class MainWindow : WindowBase
             textField.UItext.fontSize = 28;
             textField.backgroundColor = Color.clear;
             textField.height = 100;
+            elements[storable.name] = textField;
         }
 
         AddSpacer("fillerLeft", 10);
@@ -38,6 +39,29 @@ public class MainWindow : WindowBase
             slider.valueFormat = "F3";
             slider.label = storable.name;
             elements[storable.name] = slider;
+
+            if(storable.name == "Genitals")
+            {
+                if(geometry.selectedCharacter.isMale)
+                {
+                    slider.label += " (disabled on Male)";
+                }
+            }
+        }
+    }
+
+    public void UpdateGenitalsSlider()
+    {
+        var uiDynamicSlider = elements["Genitals"] as UIDynamicSlider;
+        if(uiDynamicSlider != null)
+        {
+            string label = "Genitals";
+            if(geometry.selectedCharacter.isMale)
+            {
+                label += " (disabled on Male)";
+            }
+
+            uiDynamicSlider.label = label;
         }
     }
 }
