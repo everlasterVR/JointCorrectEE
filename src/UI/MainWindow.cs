@@ -16,17 +16,18 @@ public class MainWindow : WindowBase
             rightSide: false
         );
 
-        /* Locked toggle */
+        /* Info */
         {
-            var storable = jointCorrectEE.locked;
-            var toggle = jointCorrectEE.CreateToggle(storable, true);
-            toggle.height = 52;
-            toggle.label = "Locked";
-            elements[storable.name] = toggle;
+            var storable = new JSONStorableString("infoText", "");
+            storable.val = "\n".Size(12) + "Using morphs from package FallenDancer.JointCorrect.11.var.";
+            var textField = jointCorrectEE.CreateTextField(storable, true);
+            textField.UItext.fontSize = 28;
+            textField.backgroundColor = Color.clear;
+            textField.height = 100;
         }
 
-        AddSpacer("lockedFiller", 57, true);
-        AddSpacer("lockedFiller", 10);
+        AddSpacer("fillerLeft", 10);
+        AddSpacer("fillerRight", 10, true);
 
         for(int i = 0; i < boneConfigs.Count; i++)
         {
@@ -37,16 +38,6 @@ public class MainWindow : WindowBase
             slider.valueFormat = "F3";
             slider.label = storable.name;
             elements[storable.name] = slider;
-        }
-
-        /* Info */
-        {
-            var storable = new JSONStorableString("infoText", "");
-            storable.val = "\n".Size(12) + "Morphs from package FallenDancer.JointCorrect.11.var.";
-            var textField = jointCorrectEE.CreateTextField(storable);
-            textField.UItext.fontSize = 28;
-            textField.backgroundColor = Color.clear;
-            textField.height = 100;
         }
     }
 }

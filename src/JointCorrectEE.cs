@@ -62,11 +62,11 @@ public class JointCorrectEE : MVRScript
         }
     }
 
-    private DAZCharacterSelector _geometry;
     private static Atom person { get; set; }
+    private DAZCharacterSelector _geometry;
+    public static bool personIsFemale { get; private set; }
     public static GenerateDAZMorphsControlUI morphsControlUI { get; private set; }
     public static List<BoneConfig> boneConfigs { get; private set; }
-    public JSONStorableBool locked { get; private set; }
 
     private IWindow _mainWindow;
 
@@ -80,9 +80,8 @@ public class JointCorrectEE : MVRScript
 
         person = containingAtom;
         _geometry = (DAZCharacterSelector) person.GetStorableByID("geometry");
-        morphsControlUI = _geometry.morphsControlUI;
-
-        locked = this.NewJSONStorableBool("Lock", false);
+        personIsFemale = !_geometry.selectedCharacter.isMale;
+        morphsControlUI = personIsFemale ? _geometry.morphsControlUI : _geometry.morphsControlUIOtherGender;
 
         InitMorphs();
 
@@ -97,20 +96,20 @@ public class JointCorrectEE : MVRScript
 
     public void InitMorphs()
     {
-        BoneConfig collarsConfig = null;
-        BoneConfig feetConfig = null;
-        BoneConfig forearmsConfig = null;
-        BoneConfig handsConfig = null;
-        BoneConfig shinsConfig = null;
-        BoneConfig shouldersConfig = null;
-        BoneConfig thighsConfig = null;
-        BoneConfig genitalsConfig = null;
-        BoneConfig pelvisConfig = null;
-        BoneConfig abdomenConfig = null;
-        BoneConfig abdomen2Config = null;
-        BoneConfig chestConfig = null;
-        BoneConfig neckConfig = null;
-        BoneConfig headConfig = null;
+        BoneConfig collarsConfig;
+        BoneConfig feetConfig;
+        BoneConfig forearmsConfig;
+        BoneConfig handsConfig;
+        BoneConfig shinsConfig;
+        BoneConfig shouldersConfig;
+        BoneConfig thighsConfig;
+        BoneConfig genitalsConfig;
+        BoneConfig pelvisConfig;
+        BoneConfig abdomenConfig;
+        BoneConfig abdomen2Config;
+        BoneConfig chestConfig;
+        BoneConfig neckConfig;
+        BoneConfig headConfig;
 
         /* Collars */
         {
@@ -657,7 +656,7 @@ public class JointCorrectEE : MVRScript
 
     public void Update()
     {
-        if(!_initialized || locked.val)
+        if(!_initialized)
         {
             return;
         }
