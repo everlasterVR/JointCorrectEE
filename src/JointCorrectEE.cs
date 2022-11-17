@@ -67,6 +67,7 @@ public class JointCorrectEE : MVRScript
     public static DAZCharacterSelector geometry { get; private set; }
     public static GenerateDAZMorphsControlUI morphsControlUI { get; private set; }
     public static List<BoneConfig> boneConfigs { get; private set; }
+    public JSONStorableBool disableCollarBreastJsb { get; private set; }
 
     private IWindow _mainWindow;
 
@@ -81,6 +82,7 @@ public class JointCorrectEE : MVRScript
         person = containingAtom;
         geometry = (DAZCharacterSelector) person.GetStorableByID("geometry");
         InitMorphs();
+        disableCollarBreastJsb = this.NewJSONStorableBool("disableCollarBreastMorphs", true);
 
         _mainWindow = new MainWindow();
         _mainWindow.Build();
@@ -113,7 +115,7 @@ public class JointCorrectEE : MVRScript
         BoneConfig neckConfig;
         BoneConfig headConfig;
 
-        /* Collars */
+        /* Collar Bones */
         {
             var left = GetBone("lCollar");
             var lCollarXn025 = new MorphConfig("LCollarX-025");
@@ -148,7 +150,7 @@ public class JointCorrectEE : MVRScript
                     rCollarZn050,
                     rCollarZp015,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Collars", 1, 0, 2),
+                multiplierJsf = this.NewJSONStorableFloat("Collar Bones", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var lAngles = left.GetAnglesDegrees();
@@ -156,12 +158,10 @@ public class JointCorrectEE : MVRScript
                     lCollarXp015.Update(lAngles.x, 0, 15);
 
                     // Note: Y Inverted
-                    lCollarYn026.Update(lAngles.y, 0, 26); // problematic
                     lCollarYp017.Update(lAngles.y, 0, -17);
 
                     // Note: Rotation order not honored, Z Inverted
                     lCollarZn015.Update(lAngles.z, 0, 15);
-                    lCollarZp050.Update(lAngles.z, 0, -50); // problematic
 
                     var rAngles = right.GetAnglesDegrees();
                     // Note: Rotation order not honored
@@ -170,11 +170,32 @@ public class JointCorrectEE : MVRScript
 
                     // Note: Y Inverted
                     rCollarYn017.Update(rAngles.y, 0, 17);
-                    rCollarYp026.Update(rAngles.y, 0, -26); // problematic
 
                     // Note: Rotation order not honored, Z Inverted
-                    rCollarZn050.Update(rAngles.z, 0, 50); // problematic
                     rCollarZp015.Update(rAngles.z, 0, -15);
+
+                    /* These morphs visibly affect breast vertices that have soft physics joints */
+                    if(!disableCollarBreastJsb.val)
+                    {
+                        // Note: Y Inverted
+                        lCollarYn026.Update(lAngles.y, 0, 26); // problematic
+
+                        // Note: Rotation order not honored, Z Inverted
+                        lCollarZp050.Update(lAngles.z, 0, -50); // problematic
+
+                        // Note: Y Inverted
+                        rCollarYp026.Update(rAngles.y, 0, -26); // problematic
+
+                        // Note: Rotation order not honored, Z Inverted
+                        rCollarZn050.Update(rAngles.z, 0, 50); // problematic
+                    }
+                    else
+                    {
+                        lCollarYn026.morph.morphValue = 0;
+                        lCollarZp050.morph.morphValue = 0;
+                        rCollarYp026.morph.morphValue = 0;
+                        rCollarZn050.morph.morphValue = 0;
+                    }
                 },
             };
         }

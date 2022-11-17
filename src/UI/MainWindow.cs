@@ -48,6 +48,15 @@ public class MainWindow : WindowBase
                 }
             }
         }
+
+        /* Collar breast morph toggle */
+        {
+            var storable = jointCorrectEE.disableCollarBreastJsb;
+            var toggle = jointCorrectEE.CreateToggle(storable);
+            toggle.label = "Disable Collar Bone Morphs Affecting Breast Vertices";
+            toggle.height = 80;
+            elements[storable.name] = toggle;
+        }
     }
 
     public void UpdateGenitalsSlider()
