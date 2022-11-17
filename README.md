@@ -1,5 +1,7 @@
 # JointCorrectEE Virt-A-Mate Plugin
 
+Download: https://hub.virtamate.com/resources/jointcorrectee.25933/
+
 Based on JointCorrect by FallenDancer: https://hub.virtamate.com/resources/joint-correct.3542/
 
 ## License
