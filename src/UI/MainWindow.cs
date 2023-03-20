@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using UnityEngine;
 
 sealed class MainWindow : WindowBase
 {
@@ -65,6 +64,7 @@ sealed class MainWindow : WindowBase
         {
             slider.label += " (disabled on Male)";
         }
+
         return slider;
     }
 

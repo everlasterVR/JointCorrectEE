@@ -6,7 +6,7 @@ static class Utils
 {
     public static Transform DestroyLayout(Transform transform)
     {
-        UnityEngine.Object.Destroy(transform.GetComponent<LayoutElement>());
+        Object.Destroy(transform.GetComponent<LayoutElement>());
         return transform;
     }
 
