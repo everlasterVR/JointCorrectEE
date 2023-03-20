@@ -1,77 +1,74 @@
+#define ENV_DEVELOPMENT
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using SimpleJSON;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class JointCorrectEE : MVRScript
+sealed class JointCorrectEE : ScriptBase
 {
-    public static JointCorrectEE jointCorrectEE { get; private set; }
+    /* Public static access point to plugin instance. */
     public const string VERSION = "0.0.0";
-    public static bool envIsDevelopment => VERSION.StartsWith("0.");
+    public static bool envIsDevelopment { get; private set; }
+    public static JointCorrectEE script { get; private set; }
 
-    private UnityEventsListener _pluginUIEventsListener;
+    public override bool ShouldIgnore() => false;
 
-    public override void InitUI()
-    {
-        base.InitUI();
-        if(UITransform == null || _pluginUIEventsListener != null)
-        {
-            return;
-        }
+#region *** Init ***
 
-        _pluginUIEventsListener = UITransform.gameObject.AddComponent<UnityEventsListener>();
-        if(_pluginUIEventsListener != null)
-        {
-            _pluginUIEventsListener.onEnable.AddListener(() =>
-            {
-                var background = rightUIContent.parent.parent.parent.transform.GetComponent<Image>();
-                background.color = new Color(0.85f, 0.85f, 0.85f);
-                (_mainWindow as MainWindow)?.UpdateGenitalsSlider();
-            });
-        }
-    }
-
-    private bool _initialized;
+    public static bool isInitialized => script.initialized == true;
 
     public override void Init()
     {
+        #if ENV_DEVELOPMENT
+        {
+            envIsDevelopment = true;
+        }
+        #else
+        {
+            envIsDevelopment = false;
+        }
+        #endif
+        script = this;
+
         try
         {
-            /* Used to store version in save JSON. */
-            var versionJss = this.NewJSONStorableString("version", "");
-            versionJss.val = $"{VERSION}";
+            /* Used to store version in save JSON and communicate version to other plugin instances */
+            this.NewJSONStorableString(Constant.VERSION, VERSION);
+
+            /*
+             * Restrict which atom types the plugin can be loaded onto.
+             * Session = "SessionPluginManager"
+             * Scene = "CoreControl"
+             */
             if(containingAtom.type != "Person")
             {
-                Utils.LogError($"Add to Person atom, not {containingAtom.type}");
-            }
-
-            if(Utils.PluginIsDuplicate(containingAtom, storeId))
-            {
-                Utils.LogError($"Person already has an instance of {nameof(JointCorrectEE)}.");
-                enabled = false;
+                FailInitWithMessage($"Add to a Person atom, not {containingAtom.type}.");
                 return;
             }
 
-            jointCorrectEE = this;
-            StartCoroutine(DeferInit());
+            if(containingAtom.FindStorablesByRegexMatch(Utils.Regex($@"^plugin#\d+_{nameof(JointCorrectEE)}")).Count > 0)
+            {
+                FailInitWithMessage($"An instance of {nameof(JointCorrectEE)} is already added.");
+                return;
+            }
+
+            StartCoroutine(InitCo());
         }
         catch(Exception e)
         {
-            Utils.LogError($"Init: {e}");
+            initialized = false;
+            Loggr.Error($"Init: {e}");
         }
     }
 
-    public static Atom person { get; private set; }
-    public static DAZCharacterSelector geometry { get; private set; }
-    public static GenerateDAZMorphsControlUI morphsControlUI { get; private set; }
+    public static Person person { get; private set; }
     public static List<BoneConfig> boneConfigs { get; private set; }
     public JSONStorableBool disableCollarBreastJsb { get; private set; }
 
-    private IWindow _mainWindow;
+    IWindow _mainWindow;
 
-    private IEnumerator DeferInit()
+    IEnumerator InitCo()
     {
         yield return new WaitForEndOfFrame();
         while(SuperController.singleton.isLoading)
@@ -79,27 +76,60 @@ public class JointCorrectEE : MVRScript
             yield return null;
         }
 
-        person = containingAtom;
-        geometry = (DAZCharacterSelector) person.GetStorableByID("geometry");
-        InitMorphs();
-        disableCollarBreastJsb = this.NewJSONStorableBool("disableCollarBreastMorphs", true);
+        if(initialized == false)
+        {
+            yield break;
+        }
 
-        _mainWindow = new MainWindow();
-        _mainWindow.Build();
+        yield return SetupPerson();
 
-        _initialized = true;
+        try
+        {
+            InitMorphs();
+            disableCollarBreastJsb = this.NewJSONStorableBool("disableCollarBreastMorphs", true);
+
+            _mainWindow = new MainWindow();
+            _mainWindow.Rebuild();
+
+            initialized = true;
+        }
+        catch(Exception e)
+        {
+            FailInitWithError($"Init error: {e}");
+        }
+    }
+
+    IEnumerator SetupPerson()
+    {
+        person = new Person(containingAtom);
+        const int limit = 15;
+        yield return person.WaitForGeometryReady(limit);
+        if(!person.geometryReady)
+        {
+            FailInitWithError(
+                $"Selected character {person.geometry.selectedCharacter.name} was not ready after {limit.ToString()} seconds of waiting"
+            );
+            yield break;
+        }
+
+        try
+        {
+            person.Setup();
+        }
+        catch(Exception e)
+        {
+            FailInitWithError($"Person setup error: {e}");
+        }
     }
 
     public void RebuildMainWindow()
     {
         _mainWindow.Clear();
-        _mainWindow.Build();
+        _mainWindow.Rebuild();
     }
 
-    private void InitMorphs()
+    void InitMorphs()
     {
-        morphsControlUI = !geometry.selectedCharacter.isMale ? geometry.morphsControlUI : geometry.morphsControlUIOtherGender;
-
         BoneConfig collarsConfig;
         BoneConfig feetConfig;
         BoneConfig forearmsConfig;
@@ -117,21 +147,21 @@ public class JointCorrectEE : MVRScript
 
         /* Collar Bones */
         {
-            var left = GetBone("lCollar");
-            var lCollarXn025 = new MorphConfig("LCollarX-025");
-            var lCollarXp015 = new MorphConfig("LCollarX+015");
-            var lCollarYn026 = new MorphConfig("LCollarY-026");
-            var lCollarYp017 = new MorphConfig("LCollarY+017");
-            var lCollarZn015 = new MorphConfig("LCollarZ-015");
-            var lCollarZp050 = new MorphConfig("LCollarZ+050");
+            var left = person.GetBone("lCollar");
+            var lCollarXn025 = new MorphConfig(person.GetMorph("LCollarX-025"));
+            var lCollarXp015 = new MorphConfig(person.GetMorph("LCollarX+015"));
+            var lCollarYn026 = new MorphConfig(person.GetMorph("LCollarY-026"));
+            var lCollarYp017 = new MorphConfig(person.GetMorph("LCollarY+017"));
+            var lCollarZn015 = new MorphConfig(person.GetMorph("LCollarZ-015"));
+            var lCollarZp050 = new MorphConfig(person.GetMorph("LCollarZ+050"));
 
-            var right = GetBone("rCollar");
-            var rCollarXn025 = new MorphConfig("RCollarX-025");
-            var rCollarXp015 = new MorphConfig("RCollarX+015");
-            var rCollarYn017 = new MorphConfig("RCollarY-017");
-            var rCollarYp026 = new MorphConfig("RCollarY+026");
-            var rCollarZn050 = new MorphConfig("RCollarZ-050");
-            var rCollarZp015 = new MorphConfig("RCollarZ+015");
+            var right = person.GetBone("rCollar");
+            var rCollarXn025 = new MorphConfig(person.GetMorph("RCollarX-025"));
+            var rCollarXp015 = new MorphConfig(person.GetMorph("RCollarX+015"));
+            var rCollarYn017 = new MorphConfig(person.GetMorph("RCollarY-017"));
+            var rCollarYp026 = new MorphConfig(person.GetMorph("RCollarY+026"));
+            var rCollarZn050 = new MorphConfig(person.GetMorph("RCollarZ-050"));
+            var rCollarZp015 = new MorphConfig(person.GetMorph("RCollarZ+015"));
 
             collarsConfig = new BoneConfig
             {
@@ -202,13 +232,13 @@ public class JointCorrectEE : MVRScript
 
         /* Feet */
         {
-            var left = GetBone("lFoot");
-            var lFootXp065 = new MorphConfig("LFootX+065");
-            var lFootXn040 = new MorphConfig("LFootX-040");
+            var left = person.GetBone("lFoot");
+            var lFootXp065 = new MorphConfig(person.GetMorph("LFootX+065"));
+            var lFootXn040 = new MorphConfig(person.GetMorph("LFootX-040"));
 
-            var right = GetBone("rFoot");
-            var rFootXp065 = new MorphConfig("RFootX+065");
-            var rFootXn040 = new MorphConfig("RFootX-040");
+            var right = person.GetBone("rFoot");
+            var rFootXp065 = new MorphConfig(person.GetMorph("RFootX+065"));
+            var rFootXn040 = new MorphConfig(person.GetMorph("RFootX-040"));
 
             feetConfig = new BoneConfig
             {
@@ -235,13 +265,13 @@ public class JointCorrectEE : MVRScript
 
         /* Forearms */
         {
-            var lForearmBone = GetBone("lForeArm");
-            var lForearmYn100 = new MorphConfig("LForearmY-100");
-            var lForearmYn130 = new MorphConfig("LForearmY-130");
+            var lForearmBone = person.GetBone("lForeArm");
+            var lForearmYn100 = new MorphConfig(person.GetMorph("LForearmY-100"));
+            var lForearmYn130 = new MorphConfig(person.GetMorph("LForearmY-130"));
 
-            var rForearmBone = GetBone("rForeArm");
-            var rForearmYp100 = new MorphConfig("RForearmY+100");
-            var rForearmYp130 = new MorphConfig("RForearmY+130");
+            var rForearmBone = person.GetBone("rForeArm");
+            var rForearmYp100 = new MorphConfig(person.GetMorph("RForearmY+100"));
+            var rForearmYp130 = new MorphConfig(person.GetMorph("RForearmY+130"));
 
             forearmsConfig = new BoneConfig
             {
@@ -270,11 +300,11 @@ public class JointCorrectEE : MVRScript
 
         /* Hands */
         {
-            var left = GetBone("lHand");
-            var lHandZp080 = new MorphConfig("LHandZ+080");
+            var left = person.GetBone("lHand");
+            var lHandZp080 = new MorphConfig(person.GetMorph("LHandZ+080"));
 
-            var right = GetBone("rHand");
-            var rHandZn080 = new MorphConfig("RHandZ-080");
+            var right = person.GetBone("rHand");
+            var rHandZn080 = new MorphConfig(person.GetMorph("RHandZ-080"));
 
             handsConfig = new BoneConfig
             {
@@ -297,13 +327,13 @@ public class JointCorrectEE : MVRScript
 
         /* Shins */
         {
-            var left = GetBone("lShin");
-            var lShinXp085 = new MorphConfig("LShinX+085");
-            var lShinXp140 = new MorphConfig("LShinX+140");
+            var left = person.GetBone("lShin");
+            var lShinXp085 = new MorphConfig(person.GetMorph("LShinX+085"));
+            var lShinXp140 = new MorphConfig(person.GetMorph("LShinX+140"));
 
-            var right = GetBone("rShin");
-            var rShinXp085 = new MorphConfig("RShinX+085");
-            var rShinXp140 = new MorphConfig("RShinX+140");
+            var right = person.GetBone("rShin");
+            var rShinXp085 = new MorphConfig(person.GetMorph("RShinX+085"));
+            var rShinXp140 = new MorphConfig(person.GetMorph("RShinX+140"));
 
             shinsConfig = new BoneConfig
             {
@@ -330,19 +360,19 @@ public class JointCorrectEE : MVRScript
 
         /* Shoulders */
         {
-            var left = GetBone("lShldr");
-            var lShldrZp035 = new MorphConfig("LShldrZ+035");
-            var lShldrZn060 = new MorphConfig("LShldrZ-060");
-            var lShldrZn075 = new MorphConfig("LShldrZ-075");
-            var lShldrYn095 = new MorphConfig("LShldrY-095");
-            var lShldrYp040 = new MorphConfig("LShldrY+040");
+            var left = person.GetBone("lShldr");
+            var lShldrZp035 = new MorphConfig(person.GetMorph("LShldrZ+035"));
+            var lShldrZn060 = new MorphConfig(person.GetMorph("LShldrZ-060"));
+            var lShldrZn075 = new MorphConfig(person.GetMorph("LShldrZ-075"));
+            var lShldrYn095 = new MorphConfig(person.GetMorph("LShldrY-095"));
+            var lShldrYp040 = new MorphConfig(person.GetMorph("LShldrY+040"));
 
-            var right = GetBone("rShldr");
-            var rShldrZn035 = new MorphConfig("RShldrZ-035");
-            var rShldrZp060 = new MorphConfig("RShldrZ+060");
-            var rShldrZp075 = new MorphConfig("RShldrZ+075");
-            var rShldrYn040 = new MorphConfig("RShldrY-040");
-            var rShldrYp095 = new MorphConfig("RShldrY+095");
+            var right = person.GetBone("rShldr");
+            var rShldrZn035 = new MorphConfig(person.GetMorph("RShldrZ-035"));
+            var rShldrZp060 = new MorphConfig(person.GetMorph("RShldrZ+060"));
+            var rShldrZp075 = new MorphConfig(person.GetMorph("RShldrZ+075"));
+            var rShldrYn040 = new MorphConfig(person.GetMorph("RShldrY-040"));
+            var rShldrYp095 = new MorphConfig(person.GetMorph("RShldrY+095"));
 
             shouldersConfig = new BoneConfig
             {
@@ -367,7 +397,7 @@ public class JointCorrectEE : MVRScript
                     lShldrYn095.Update(lAngles.y, 0, 95);
                     lShldrYp040.Update(lAngles.y, 0, -40);
                     // Remove -Z as Y approaches -40
-                    float zcorLeft = lAngles.z * -Utils.NormalizeFloat(lAngles.y, 0, -40);
+                    float zcorLeft = lAngles.z * -Calc.NormalizeFloat(lAngles.y, 0, -40);
                     // Note: DAZ Z = VaM Z Inverted
                     lShldrZp035.Update(lAngles.z, 0, -35);
                     lShldrZn060.Update(lAngles.z + zcorLeft, 0, 60);
@@ -378,7 +408,7 @@ public class JointCorrectEE : MVRScript
                     rShldrYn040.Update(rAngles.y, 0, 40);
                     rShldrYp095.Update(rAngles.y, 0, -95);
                     // Remove +Z as Y approaches 40
-                    float zcorRight = rAngles.z * -Utils.NormalizeFloat(rAngles.y, 0, 40);
+                    float zcorRight = rAngles.z * -Calc.NormalizeFloat(rAngles.y, 0, 40);
                     // Note: DAZ Z = VaM Z Inverted
                     rShldrZn035.Update(rAngles.z, 0, 35);
                     rShldrZp060.Update(rAngles.z + zcorRight, 0, -60);
@@ -389,26 +419,26 @@ public class JointCorrectEE : MVRScript
 
         /* Thighs */
         {
-            var left = GetBone("lThigh");
-            var lThighXp035 = new MorphConfig("LThighX+035");
-            var lThighXn055 = new MorphConfig("LThighX-055");
-            var lThighXn115 = new MorphConfig("LThighX-115");
-            var lThighYp075 = new MorphConfig("LThighY+075");
-            var lThighYn075 = new MorphConfig("LThighY-075");
-            var lThighZp085 = new MorphConfig("LThighZ+085");
-            var lThighZn015 = new MorphConfig("LThighZ-015");
+            var left = person.GetBone("lThigh");
+            var lThighXp035 = new MorphConfig(person.GetMorph("LThighX+035"));
+            var lThighXn055 = new MorphConfig(person.GetMorph("LThighX-055"));
+            var lThighXn115 = new MorphConfig(person.GetMorph("LThighX-115"));
+            var lThighYp075 = new MorphConfig(person.GetMorph("LThighY+075"));
+            var lThighYn075 = new MorphConfig(person.GetMorph("LThighY-075"));
+            var lThighZp085 = new MorphConfig(person.GetMorph("LThighZ+085"));
+            var lThighZn015 = new MorphConfig(person.GetMorph("LThighZ-015"));
 
-            var right = GetBone("rThigh");
-            var rThighXp035 = new MorphConfig("RThighX+035");
-            var rThighXn055 = new MorphConfig("RThighX-055");
-            var rThighXn115 = new MorphConfig("RThighX-115");
-            var rThighYn075 = new MorphConfig("RThighY-075");
-            var rThighYp075 = new MorphConfig("RThighY+075");
-            var rThighZn085 = new MorphConfig("RThighZ-085");
-            var rThighZp015 = new MorphConfig("RThighZ+015");
+            var right = person.GetBone("rThigh");
+            var rThighXp035 = new MorphConfig(person.GetMorph("RThighX+035"));
+            var rThighXn055 = new MorphConfig(person.GetMorph("RThighX-055"));
+            var rThighXn115 = new MorphConfig(person.GetMorph("RThighX-115"));
+            var rThighYn075 = new MorphConfig(person.GetMorph("RThighY-075"));
+            var rThighYp075 = new MorphConfig(person.GetMorph("RThighY+075"));
+            var rThighZn085 = new MorphConfig(person.GetMorph("RThighZ-085"));
+            var rThighZp015 = new MorphConfig(person.GetMorph("RThighZ+015"));
 
-            var cThighZp180 = new MorphConfig("CThighsZ+180");
-            var cThighXn115 = new MorphConfig("CThighsX-115");
+            var cThighZp180 = new MorphConfig(person.GetMorph("CThighsZ+180"));
+            var cThighXn115 = new MorphConfig(person.GetMorph("CThighsX-115"));
 
             thighsConfig = new BoneConfig
             {
@@ -471,17 +501,17 @@ public class JointCorrectEE : MVRScript
 
         /* Genitals */
         {
-            var left = GetBone("lThigh");
-            var lThighZp085Gens = new MorphConfig("LThighZ+085.gens");
+            var left = person.GetBone("lThigh");
+            var lThighZp085Gens = new MorphConfig(person.GetMorph("LThighZ+085.gens"));
             // var lThighZn015gens = GetMorph("LThighZ-015.gens"); // unused
 
-            var right = GetBone("rThigh");
-            var rThighZn085Gens = new MorphConfig("RThighZ-085.gens");
+            var right = person.GetBone("rThigh");
+            var rThighZn085Gens = new MorphConfig(person.GetMorph("RThighZ-085.gens"));
 
             // var cThighZ180gens = GetMorph("CThighsZ180.gens"); // unused
-            var cThighZp180Gens = new MorphConfig("CThighsZ+180.gens");
-            var cThighZn030Gens = new MorphConfig("CThighsZ-030.gens");
-            var cThighXn115Gens = new MorphConfig("CThighsX-115.gens");
+            var cThighZp180Gens = new MorphConfig(person.GetMorph("CThighsZ+180.gens"));
+            var cThighZn030Gens = new MorphConfig(person.GetMorph("CThighsZ-030.gens"));
+            var cThighXn115Gens = new MorphConfig(person.GetMorph("CThighsX-115.gens"));
 
             genitalsConfig = new BoneConfig
             {
@@ -516,9 +546,9 @@ public class JointCorrectEE : MVRScript
 
         /* Pelvis */
         {
-            var bone = GetBone("pelvis");
-            var pelvisXp030 = new MorphConfig("TPelvisX+030");
-            var pelvisXn015 = new MorphConfig("TPelvisX-015");
+            var bone = person.GetBone("pelvis");
+            var pelvisXp030 = new MorphConfig(person.GetMorph("TPelvisX+030"));
+            var pelvisXn015 = new MorphConfig(person.GetMorph("TPelvisX-015"));
 
             pelvisConfig = new BoneConfig
             {
@@ -539,9 +569,9 @@ public class JointCorrectEE : MVRScript
 
         /* Abdomen */
         {
-            var bone = GetBone("abdomen");
-            var abdomenXn020 = new MorphConfig("TAbdomenX-020");
-            var abdomenXp030 = new MorphConfig("TAbdomenX+030");
+            var bone = person.GetBone("abdomen");
+            var abdomenXn020 = new MorphConfig(person.GetMorph("TAbdomenX-020"));
+            var abdomenXp030 = new MorphConfig(person.GetMorph("TAbdomenX+030"));
 
             abdomenConfig = new BoneConfig
             {
@@ -562,9 +592,9 @@ public class JointCorrectEE : MVRScript
 
         /* Abdomen2 */
         {
-            var bone = GetBone("abdomen2");
-            var abdomen2Xn020 = new MorphConfig("TAbdomen2X-020");
-            var abdomen2Xp030 = new MorphConfig("TAbdomen2X+030");
+            var bone = person.GetBone("abdomen2");
+            var abdomen2Xn020 = new MorphConfig(person.GetMorph("TAbdomen2X-020"));
+            var abdomen2Xp030 = new MorphConfig(person.GetMorph("TAbdomen2X+030"));
 
             abdomen2Config = new BoneConfig
             {
@@ -585,8 +615,8 @@ public class JointCorrectEE : MVRScript
 
         /* Chest */
         {
-            var bone = GetBone("chest");
-            var chestXp020 = new MorphConfig("TChestX+020");
+            var bone = person.GetBone("chest");
+            var chestXp020 = new MorphConfig(person.GetMorph("TChestX+020"));
 
             chestConfig = new BoneConfig
             {
@@ -605,10 +635,10 @@ public class JointCorrectEE : MVRScript
 
         /* Neck */
         {
-            var bone = GetBone("neck");
-            var neckXn030 = new MorphConfig("TNeckX-030");
-            var neckYp035 = new MorphConfig("TNeckY+035");
-            var neckYn035 = new MorphConfig("TNeckY-035");
+            var bone = person.GetBone("neck");
+            var neckXn030 = new MorphConfig(person.GetMorph("TNeckX-030"));
+            var neckYp035 = new MorphConfig(person.GetMorph("TNeckY+035"));
+            var neckYn035 = new MorphConfig(person.GetMorph("TNeckY-035"));
 
             neckConfig = new BoneConfig
             {
@@ -631,9 +661,9 @@ public class JointCorrectEE : MVRScript
 
         /* Head */
         {
-            var bone = GetBone("head");
-            var headXn045 = new MorphConfig("THeadX-045");
-            var headXp035 = new MorphConfig("THeadX+035");
+            var bone = person.GetBone("head");
+            var headXn045 = new MorphConfig(person.GetMorph("THeadX-045"));
+            var headXp035 = new MorphConfig(person.GetMorph("THeadX+035"));
 
             headConfig = new BoneConfig
             {
@@ -677,28 +707,28 @@ public class JointCorrectEE : MVRScript
         }
     }
 
-    public void Update()
+#endregion
+
+    void Update()
     {
-        if(!_initialized)
+        if(initialized != true)
         {
             return;
         }
 
+        foreach(var config in boneConfigs)
+        {
+            config.Update();
+        }
+
         try
         {
-            foreach(var config in boneConfigs)
-            {
-                config.Update();
-            }
         }
         catch(Exception e)
         {
-            Utils.LogError($"Update: {e}");
+            Loggr.Error($"{nameof(Update)} error: {e}");
         }
     }
-
-    private static DAZBone GetBone(string jointName) =>
-        person.GetStorableByID(jointName).transform.GetComponent<DAZBone>();
 
     public override void RestoreFromJSON(
         JSONClass jsonClass,
@@ -708,21 +738,32 @@ public class JointCorrectEE : MVRScript
         bool setMissingToDefault = true
     )
     {
-        if(jsonClass.HasKey("version"))
+        /* Disable early to allow correct enabled value to be used during Init */
+        if(jsonClass.HasKey("enabled") && !jsonClass["enabled"].AsBool)
         {
-            jsonClass["version"] = $"{VERSION}";
+            enabled = false;
         }
 
-        StartCoroutine(DeferRestoreFromJSON(
-            jsonClass,
-            restorePhysical,
-            restoreAppearance,
-            presetAtoms,
-            setMissingToDefault
-        ));
+        /* Prevent overriding versionJss.val from JSON. Version stored in JSON just for information,
+         * but could be intercepted here and used to save a "loadedFromVersion" value.
+         */
+        if(jsonClass.HasKey(Constant.VERSION))
+        {
+            jsonClass[Constant.VERSION] = VERSION;
+        }
+
+        StartCoroutine(
+            RestoreFromJSONCo(
+                jsonClass,
+                restorePhysical,
+                restoreAppearance,
+                presetAtoms,
+                setMissingToDefault
+            )
+        );
     }
 
-    private IEnumerator DeferRestoreFromJSON(
+    IEnumerator RestoreFromJSONCo(
         JSONClass jsonClass,
         bool restorePhysical,
         bool restoreAppearance,
@@ -730,17 +771,40 @@ public class JointCorrectEE : MVRScript
         bool setMissingToDefault
     )
     {
-        while(!_initialized)
+        while(initialized == null)
         {
             yield return null;
+        }
+
+        if(initialized == false)
+        {
+            yield break;
         }
 
         base.RestoreFromJSON(jsonClass, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
     }
 
-    public void OnEnable()
+    public void AddTextFieldToJss(UIDynamicTextField textField, JSONStorableString jss)
     {
-        if(!_initialized)
+        jss.dynamicText = textField;
+        textFieldToJSONStorableString.Add(textField, jss);
+    }
+
+    public void AddToggleToJsb(UIDynamicToggle toggle, JSONStorableBool jsb)
+    {
+        jsb.toggle = toggle.toggle;
+        toggleToJSONStorableBool.Add(toggle, jsb);
+    }
+
+    public void AddSliderToJsf(UIDynamicSlider slider, JSONStorableFloat jsf)
+    {
+        jsf.slider = slider.slider;
+        sliderToJSONStorableFloat.Add(slider, jsf);
+    }
+
+    void OnEnable()
+    {
+        if(initialized != true)
         {
             return;
         }
@@ -750,12 +814,17 @@ public class JointCorrectEE : MVRScript
         }
         catch(Exception e)
         {
-            Utils.LogError($"OnEnable: {e}");
+            Loggr.Error($"{nameof(OnEnable)} error: {e}");
         }
     }
 
-    public void OnDisable()
+    void OnDisable()
     {
+        if(initialized != true)
+        {
+            return;
+        }
+
         try
         {
             foreach(var config in boneConfigs)
@@ -765,36 +834,29 @@ public class JointCorrectEE : MVRScript
         }
         catch(Exception e)
         {
-            if(_initialized)
-            {
-                Utils.LogError($"OnDisable: {e}");
-            }
-            else if(envIsDevelopment)
-            {
-                Utils.Log($"OnDisable: {e}");
-            }
+            Loggr.Error($"{nameof(OnDisable)} error: {e}");
         }
     }
 
-    public void OnDestroy()
+    new void OnDestroy()
     {
         try
         {
+            base.OnDestroy();
+            /* Nullify static reference fields to let GC collect unreachable instances */
             person = null;
-            geometry = null;
-            morphsControlUI = null;
             boneConfigs = null;
-            jointCorrectEE = null;
+            script = null;
         }
         catch(Exception e)
         {
-            if(_initialized)
+            if(initialized == true)
             {
-                Utils.LogError($"OnDestroy: {e}");
+                SuperController.LogError($"OnDestroy: {e}");
             }
-            else if(envIsDevelopment)
+            else
             {
-                Utils.Log($"OnDestroy: {e}");
+                Debug.LogError($"{nameof(OnDestroy)}: {e}");
             }
         }
     }

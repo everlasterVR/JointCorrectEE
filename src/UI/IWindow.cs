@@ -1,16 +1,10 @@
-using System.Collections.Generic;
-
-public interface IWindow
+interface IWindow
 {
     string GetId();
 
     IWindow GetActiveNestedWindow();
 
-    void Build();
-
-    void OnReturn();
-
-    List<UIDynamicSlider> GetSliders();
+    void Rebuild();
 
     void Clear();
 

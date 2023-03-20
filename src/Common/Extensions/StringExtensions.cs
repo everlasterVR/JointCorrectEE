@@ -1,7 +1,6 @@
-﻿// ReSharper disable MemberCanBePrivate.Global UnusedMember.Global UnusedMethodReturnValue.Global UnusedType.Global
-using UnityEngine;
+﻿using UnityEngine;
 
-public static class StringExtensions
+static partial class StringExtensions
 {
     public static string Bold(this string str) => $"<b>{str}</b>";
 

@@ -1,13 +1,13 @@
-﻿public class MorphConfig
+﻿sealed class MorphConfig
 {
     public DAZMorph morph { get; }
 
     // public JSONStorableFloat multiplierJsf { get; }
     public JSONStorableFloat groupMultiplierJsf { private get; set; }
 
-    public MorphConfig(string name)
+    public MorphConfig(DAZMorph morph)
     {
-        morph = Utils.GetMorph(name);
+        this.morph = morph;
     }
 
     // public MorphConfig(string name, JSONStorableFloat multiplierJsf)
@@ -18,7 +18,7 @@
 
     public void Update(float value, float min, float max)
     {
-        value = Utils.NormalizeFloat(value, min, max);
+        value = Calc.NormalizeFloat(value, min, max);
         // morph.morphValue = groupMultiplierJsf.val * multiplierJsf.val * value;
         morph.morphValue = groupMultiplierJsf.val * value;
     }

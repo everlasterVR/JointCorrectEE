@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-public class BoneConfig
+sealed class BoneConfig
 {
     public JSONStorableFloat multiplierJsf { get; set; }
     public List<MorphConfig> morphConfigs { get; set; }

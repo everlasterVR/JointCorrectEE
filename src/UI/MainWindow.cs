@@ -1,71 +1,80 @@
-﻿using UnityEngine;
-using static JointCorrectEE;
+﻿using System.Linq;
+using UnityEngine;
 
-public class MainWindow : WindowBase
+sealed class MainWindow : WindowBase
 {
-    public MainWindow()
+    public MainWindow() : base(JointCorrectEE.script, nameof(MainWindow))
     {
     }
 
     protected override void OnBuild()
     {
-        CreateTitleTextField(
-            new JSONStorableString("title", "\n".Size(24) + $"{nameof(JointCorrectEE)}    v{VERSION}".Bold()),
-            fontSize: 40,
-            height: 100,
-            rightSide: false
+        BuildLeftSide();
+        BuildRightSide();
+    }
+
+    void BuildLeftSide(bool rightSide = false)
+    {
+        AddSpacer(80, rightSide);
+
+        foreach(var config in JointCorrectEE.boneConfigs.Take(7))
+        {
+            AddElement(() => MultiplierSlider(config.multiplierJsf, rightSide));
+        }
+
+        AddElement(
+            () =>
+            {
+                var toggle = script.CreateToggle(JointCorrectEE.script.disableCollarBreastJsb, rightSide);
+                toggle.label = "Disable Collar Bone Morphs Affecting Breast Vertices";
+                toggle.height = 80;
+                return toggle;
+            }
+        );
+    }
+
+    void BuildRightSide(bool rightSide = true)
+    {
+        AddInfoTextField(
+            "\n".Size(12) +
+            "Using morphs from package FallenDancer.JointCorrect.11.var.",
+            rightSide,
+            height: 80
         );
 
-        /* Info */
+        foreach(var config in JointCorrectEE.boneConfigs.Skip(7))
         {
-            var storable = new JSONStorableString("infoText", "");
-            storable.val = "\n".Size(12) + "Using morphs from package FallenDancer.JointCorrect.11.var.";
-            var textField = jointCorrectEE.CreateTextField(storable, true);
-            textField.UItext.fontSize = 28;
-            textField.backgroundColor = Color.clear;
-            textField.height = 100;
-            elements[storable.name] = textField;
+            AddElement(() => MultiplierSlider(config.multiplierJsf, rightSide));
         }
 
-        AddSpacer("fillerLeft", 10);
-        AddSpacer("fillerRight", 10, true);
-
-        for(int i = 0; i < boneConfigs.Count; i++)
+        /* Version text field */
         {
-            var config = boneConfigs[i];
-            var storable = config.multiplierJsf;
-            bool rightSide = i > 6;
-            var slider = jointCorrectEE.CreateSlider(storable, rightSide);
-            slider.valueFormat = "F3";
-            slider.label = storable.name;
-            elements[storable.name] = slider;
-
-            if(storable.name == "Genitals")
-            {
-                if(geometry.selectedCharacter.isMale)
-                {
-                    slider.label += " (disabled on Male)";
-                }
-            }
+            var versionJss = new JSONStorableString("version", "");
+            var versionTextField = CreateVersionTextField(versionJss);
+            AddElement(versionTextField);
+            JointCorrectEE.script.AddTextFieldToJss(versionTextField, versionJss);
         }
+    }
 
-        /* Collar breast morph toggle */
+    UIDynamicSlider MultiplierSlider(JSONStorableFloat storable, bool rightSide)
+    {
+        var slider = script.CreateSlider(storable, rightSide);
+        slider.valueFormat = "F3";
+        slider.label = storable.name;
+        if(storable.name == "Genitals" && !JointCorrectEE.person.isFemale)
         {
-            var storable = jointCorrectEE.disableCollarBreastJsb;
-            var toggle = jointCorrectEE.CreateToggle(storable);
-            toggle.label = "Disable Collar Bone Morphs Affecting Breast Vertices";
-            toggle.height = 80;
-            elements[storable.name] = toggle;
+            slider.label += " (disabled on Male)";
         }
+        return slider;
     }
 
     public void UpdateGenitalsSlider()
     {
-        var uiDynamicSlider = elements["Genitals"] as UIDynamicSlider;
+        var uiDynamicSlider = GetElementAs<UIDynamicSlider>("Genitals");
         if(uiDynamicSlider != null)
         {
             string label = "Genitals";
-            if(geometry.selectedCharacter.isMale)
+            if(!JointCorrectEE.person.isFemale)
             {
                 label += " (disabled on Male)";
             }

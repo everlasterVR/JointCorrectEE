@@ -4,11 +4,11 @@
    "packageName": "JointCorrectEE",
    "standardReferenceVersionOption": "Exact",
    "scriptReferenceVersionOption": "Exact",
-   "description": "v0.0.0. A more customizable version of Joint Correct, a corrective morph system for G2F figures.",
+   "description": "v0.0.0. A customizable version of Joint Correct, a corrective morph system for G2F figures.",
    "credits": "FallenDancer",
    "instructions": "Add to a Person atom.",
    "promotionalLink": "https://patreon.com/everlaster",
-   "programVersion": "1.20.77.9",
+   "programVersion": "1.22.0.1",
    "contentList": [
       "Custom/Scripts/everlaster/JointCorrectEE/JointCorrectEE.cslist",
       "Custom/Scripts/everlaster/JointCorrectEE/src"
