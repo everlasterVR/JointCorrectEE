@@ -30,7 +30,7 @@ static class BehaviourExtensions
 
 static class GameObjectExtensions
 {
-    internal static bool IsActiveInHierarchyNullSafe(this GameObject gameObject) => gameObject && gameObject.activeInHierarchy;
+    public static bool IsActiveInHierarchyNullSafe(this GameObject gameObject) => gameObject && gameObject.activeInHierarchy;
 }
 
 static class MonoBehaviourExtensions

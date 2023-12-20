@@ -9,8 +9,10 @@ class ScriptBase : MVRScript
     public override bool ShouldIgnore() => true;
 
     public const string VERSION = "0.0.0";
-    internal readonly LogBuilder logBuilder = new LogBuilder();
+    [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+    public readonly LogBuilder logBuilder = new LogBuilder();
     protected bool isInitialized;
+    [SuppressMessage("ReSharper", "NotAccessedField.Global")]
     protected bool isRestoringFromJSON;
     UnityEventsListener _parentObjectEventsListener;
     UnityEventsListener _pluginUIEventsListener;

@@ -33,6 +33,7 @@ sealed class LogBuilder
         .Append(". Please report the issue!")
         .LogError();
 
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public void Error(string error) => Clear()
         .Append(error)
         .Append(". Please report the issue!")

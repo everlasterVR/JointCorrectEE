@@ -38,7 +38,7 @@ sealed class MainWindow : WindowBase
             "\n".Size(12) +
             "Using morphs from package FallenDancer.JointCorrect.11.var.",
             rightSide,
-            height: 80
+            80
         );
 
         foreach(var config in script.BoneConfigs.Skip(7))

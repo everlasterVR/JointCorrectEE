@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 sealed class UnityEventsListener : MonoBehaviour
 {
-    internal bool IsEnabled { get; private set; }
-    internal Action enabledHandlers;
-    internal Action disabledHandlers;
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
+    public bool IsEnabled { get; private set; }
+
+    public Action enabledHandlers;
+    public Action disabledHandlers;
 
     void OnEnable()
     {

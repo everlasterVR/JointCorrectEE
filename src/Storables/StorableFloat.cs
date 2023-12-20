@@ -15,5 +15,6 @@ sealed class StorableFloat : JSONStorableFloat
 
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public void Callback() => setCallbackFunction?.Invoke(val);
+
     public void RegisterTo(MVRScript script) => script.RegisterFloat(this);
 }

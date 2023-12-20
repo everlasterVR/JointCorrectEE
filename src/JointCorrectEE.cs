@@ -680,7 +680,7 @@ sealed class JointCorrectEE : ScriptBase
         }
 
         /* Order matters for UI */
-        BoneConfigs = new []
+        BoneConfigs = new[]
         {
             headConfig,
             neckConfig,
