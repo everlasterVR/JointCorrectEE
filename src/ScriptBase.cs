@@ -1,52 +1,47 @@
 ﻿using System;
 using System.Collections;
-using System.Diagnostics.CodeAnalysis;
 using UnityEngine.UI;
 
 class ScriptBase : MVRScript
 {
-    [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
-    public bool IsInitialized { get; protected set; }
+    public override bool ShouldIgnore() => true;
 
+    public const string VERSION = "0.0.0";
+    internal readonly LogBuilder logBuilder = new LogBuilder();
+    protected bool isInitialized;
     UnityEventsListener _pluginUIEventsListener;
-
-    public override bool ShouldIgnore() => true; // Prevent ScriptBase from showing up as a plugin in Plugins tab
+    bool _inEnabledCo;
+    bool _isUIBuilt;
 
     public override void InitUI()
     {
-        base.InitUI();
-        if(!UITransform || _pluginUIEventsListener)
+        if(ShouldIgnore())
         {
             return;
         }
 
-        StartCoroutine(InitUICo());
+        base.InitUI();
+        if(!UITransform)
+        {
+            return;
+        }
+
+        SetGrayBackground();
+        if(!_pluginUIEventsListener)
+        {
+            _pluginUIEventsListener = UITransform.gameObject.AddComponent<UnityEventsListener>();
+            _pluginUIEventsListener.enabledHandlers += OnUIEnabled;
+        }
     }
 
-    // ReSharper disable once VirtualMemberNeverOverridden.Global
-    protected virtual Action OnUIEnabled() => null;
-
-    // ReSharper disable once VirtualMemberNeverOverridden.Global
-    protected virtual Action OnUIDisabled() => null;
-
-    IEnumerator InitUICo()
+    void SetGrayBackground()
     {
-        while(!IsInitialized)
-        {
-            yield return null;
-        }
-
-        _pluginUIEventsListener = UITransform.gameObject.AddComponent<UnityEventsListener>();
-        _pluginUIEventsListener.onEnable.AddListener(() => StartCoroutine(OnUIEnabledCo(OnUIEnabled())));
-
-        var onUIDisabled = OnUIDisabled();
-        if(onUIDisabled != null)
-        {
-            _pluginUIEventsListener.onDisable.AddListener(() => StartCoroutine(OnUIDisabledCo(onUIDisabled)));
-        }
+        var background = rightUIContent.parent.parent.parent.transform.GetComponent<Image>();
+        background.color = Colors.backgroundGray;
     }
 
-    bool _inEnabledCo;
+    void OnUIEnabled() => StartCoroutine(OnUIEnabledCo());
+
 
     IEnumerator OnUIEnabledCo(Action callback = null)
     {
@@ -58,47 +53,33 @@ class ScriptBase : MVRScript
             yield break;
         }
 
-        _inEnabledCo = true;
-        SetGrayBackground();
-
-        if(callback != null)
+        while(!isInitialized)
         {
             yield return null;
-            yield return null;
-            yield return null;
+        }
 
-            if(!IsInitialized)
-            {
-                yield break;
-            }
+        _inEnabledCo = true;
+        while(!isInitialized)
+        {
+            yield return null;
+        }
 
-            callback();
+        if(!_isUIBuilt)
+        {
+            BuildUI();
+            _isUIBuilt = true;
         }
 
         _inEnabledCo = false;
     }
 
-    void SetGrayBackground()
+    protected virtual void BuildUI()
     {
-        var background = rightUIContent.parent.parent.parent.transform.GetComponent<Image>();
-        background.color = Colors.backgroundGray;
     }
 
-    IEnumerator OnUIDisabledCo(Action callback)
-    {
-        if(_inEnabledCo)
-        {
-            /* When VAM UI is toggled back on with the plugin UI already active, onEnable gets called twice and onDisable once.
-             * This ensures only onEnable logic executes.
-             */
-            yield break;
-        }
-
-        callback();
-    }
-
-    protected void OnDestroy()
+    protected void BaseDestroy()
     {
         DestroyImmediate(_pluginUIEventsListener);
+        _pluginUIEventsListener = null;
     }
 }

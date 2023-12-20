@@ -18,11 +18,11 @@ sealed class LogBuilder
 
         if(string.IsNullOrEmpty(moduleName))
         {
-            _sb.AppendFormat("{0} v{1}", nameof(JointCorrectEE), JointCorrectEE.VERSION);
+            _sb.AppendFormat("{0} v{1}", nameof(JointCorrectEE), ScriptBase.VERSION);
         }
         else
         {
-            _sb.AppendFormat("{0}.{1} v{2}", nameof(JointCorrectEE), moduleName, JointCorrectEE.VERSION);
+            _sb.AppendFormat("{0}.{1} v{2}", nameof(JointCorrectEE), moduleName, ScriptBase.VERSION);
         }
 
         _prefix = _sb.ToString();
@@ -47,7 +47,10 @@ sealed class LogBuilder
         .Append(error)
         .LogError();
 
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public void Message(string format, params object[] args) => Clear().AppendFormat(format, args).LogMessage();
+
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public void Message(string message) => Clear().Append(message).LogMessage();
 
     LogBuilder Clear()

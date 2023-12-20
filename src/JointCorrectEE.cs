@@ -3,16 +3,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using SimpleJSON;
-using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 sealed class JointCorrectEE : ScriptBase
 {
-    public const string VERSION = "0.0.0";
-
-    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-    public readonly LogBuilder logBuilder = new LogBuilder();
-
     public override bool ShouldIgnore() => false;
 
     public override void Init()
@@ -68,8 +62,7 @@ sealed class JointCorrectEE : ScriptBase
             InitMorphs();
             DisableCollarBreastJsb = this.NewJSONStorableBool("disableCollarBreastMorphs", true);
             _mainWindow = new MainWindow(this);
-            _mainWindow.Build();
-            IsInitialized = true;
+            isInitialized = true;
         }
         catch(Exception e)
         {
@@ -98,11 +91,7 @@ sealed class JointCorrectEE : ScriptBase
         }
     }
 
-    public void RebuildMainWindow()
-    {
-        _mainWindow.Clear();
-        _mainWindow.Build();
-    }
+    protected override void BuildUI() => _mainWindow.Build();
 
     void InitMorphs()
     {
@@ -685,7 +674,7 @@ sealed class JointCorrectEE : ScriptBase
 
     void Update()
     {
-        if(!IsInitialized)
+        if(!isInitialized)
         {
             return;
         }
@@ -745,7 +734,7 @@ sealed class JointCorrectEE : ScriptBase
         bool setMissingToDefault
     )
     {
-        while(!IsInitialized)
+        while(!isInitialized)
         {
             yield return null;
         }
@@ -773,7 +762,7 @@ sealed class JointCorrectEE : ScriptBase
 
     void OnEnable()
     {
-        if(!IsInitialized)
+        if(!isInitialized)
         {
             return;
         }
@@ -789,7 +778,7 @@ sealed class JointCorrectEE : ScriptBase
 
     void OnDisable()
     {
-        if(!IsInitialized)
+        if(!isInitialized)
         {
             return;
         }
@@ -807,15 +796,15 @@ sealed class JointCorrectEE : ScriptBase
         }
     }
 
-    new void OnDestroy()
+    void OnDestroy()
     {
         try
         {
-            base.OnDestroy();
+            BaseDestroy();
         }
         catch(Exception e)
         {
-            if(IsInitialized)
+            if(isInitialized)
             {
                 SuperController.LogError($"{nameof(OnDestroy)}: {e}");
             }

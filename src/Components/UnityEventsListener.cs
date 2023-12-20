@@ -1,28 +1,21 @@
-﻿using UnityEngine;
-using UnityEngine.Events;
+﻿using System;
+using UnityEngine;
 
 sealed class UnityEventsListener : MonoBehaviour
 {
-    public bool IsEnabled { get; private set; }
-    public readonly UnityEvent onEnable = new UnityEvent();
-    public readonly UnityEvent onDisable = new UnityEvent();
+    internal bool IsEnabled { get; private set; }
+    internal Action enabledHandlers;
+    internal Action disabledHandlers;
 
     void OnEnable()
     {
         IsEnabled = true;
-        onEnable.Invoke();
+        enabledHandlers?.Invoke();
     }
 
     void OnDisable()
     {
         IsEnabled = false;
-        onDisable.Invoke();
-    }
-
-    void OnDestroy()
-    {
-        IsEnabled = false;
-        onEnable.RemoveAllListeners();
-        onDisable.RemoveAllListeners();
+        disabledHandlers?.Invoke();
     }
 }
