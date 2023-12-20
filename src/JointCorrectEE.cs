@@ -13,14 +13,7 @@ sealed class JointCorrectEE : ScriptBase
     {
         try
         {
-            /* Used to store version in save JSON and communicate version to other plugin instances */
             this.NewJSONStorableString(Strings.VERSION, VERSION);
-
-            /*
-             * Restrict which atom types the plugin can be loaded onto.
-             * Session = "SessionPluginManager"
-             * Scene = "CoreControl"
-             */
             if(containingAtom.type != "Person")
             {
                 logBuilder.ErrorNoReport("Add to a Person atom, not {0}.", containingAtom.type);
@@ -782,22 +775,6 @@ sealed class JointCorrectEE : ScriptBase
     {
         jsf.slider = slider.slider;
         sliderToJSONStorableFloat.Add(slider, jsf);
-    }
-
-    void OnEnable()
-    {
-        if(!isInitialized)
-        {
-            return;
-        }
-
-        try
-        {
-        }
-        catch(Exception e)
-        {
-            logBuilder.Error("{0}: {1}", nameof(OnEnable), e);
-        }
     }
 
     void OnDisable()
