@@ -16,7 +16,7 @@ sealed class MainWindow : WindowBase
     {
         AddSpacer(80, rightSide);
 
-        foreach(var config in script.boneConfigs.Take(7))
+        foreach(var config in script.BoneConfigs.Take(7))
         {
             AddElement(() => MultiplierSlider(config.multiplierJsf, rightSide));
         }
@@ -24,7 +24,7 @@ sealed class MainWindow : WindowBase
         AddElement(
             () =>
             {
-                var toggle = script.CreateToggle(script.disableCollarBreastJsb, rightSide);
+                var toggle = script.CreateToggle(script.DisableCollarBreastJsb, rightSide);
                 toggle.label = "Disable Collar Bone Morphs Affecting Breast Vertices";
                 toggle.height = 80;
                 return toggle;
@@ -41,7 +41,7 @@ sealed class MainWindow : WindowBase
             height: 80
         );
 
-        foreach(var config in script.boneConfigs.Skip(7))
+        foreach(var config in script.BoneConfigs.Skip(7))
         {
             AddElement(() => MultiplierSlider(config.multiplierJsf, rightSide));
         }
@@ -60,7 +60,7 @@ sealed class MainWindow : WindowBase
         var slider = script.CreateSlider(storable, rightSide);
         slider.valueFormat = "F3";
         slider.label = storable.name;
-        if(storable.name == "Genitals" && !script.person.isFemale)
+        if(storable.name == "Genitals" && !script.Person.IsFemale)
         {
             slider.label += " (disabled on Male)";
         }
@@ -74,7 +74,7 @@ sealed class MainWindow : WindowBase
         if(uiDynamicSlider != null)
         {
             string label = "Genitals";
-            if(!script.person.isFemale)
+            if(!script.Person.IsFemale)
             {
                 label += " (disabled on Male)";
             }

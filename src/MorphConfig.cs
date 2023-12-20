@@ -1,25 +1,21 @@
 ﻿sealed class MorphConfig
 {
-    public DAZMorph morph { get; }
+    readonly DAZMorph _dazMorph;
+    public JSONStorableFloat groupMultiplierJsf;
 
-    // public JSONStorableFloat multiplierJsf { get; }
-    public JSONStorableFloat groupMultiplierJsf { private get; set; }
-
-    public MorphConfig(DAZMorph morph)
+    public MorphConfig(DAZMorph dazMorph)
     {
-        this.morph = morph;
+        _dazMorph = dazMorph;
     }
-
-    // public MorphConfig(string name, JSONStorableFloat multiplierJsf)
-    // {
-    //     morph = Utils.GetMorph(name);
-    //     this.multiplierJsf = multiplierJsf;
-    // }
 
     public void Update(float value, float min, float max)
     {
         value = Calc.NormalizeFloat(value, min, max);
-        // morph.morphValue = groupMultiplierJsf.val * multiplierJsf.val * value;
-        morph.morphValue = groupMultiplierJsf.val * value;
+        _dazMorph.morphValue = groupMultiplierJsf.val * value;
+    }
+
+    public void Reset()
+    {
+        _dazMorph.morphValue = 0;
     }
 }

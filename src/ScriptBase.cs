@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine.UI;
 
 class ScriptBase : MVRScript
 {
-    public bool initialized { get; protected set; }
-    UnityEventsListener pluginUIEventsListener { get; set; }
+    [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+    public bool IsInitialized { get; protected set; }
+
+    UnityEventsListener _pluginUIEventsListener;
 
     public override bool ShouldIgnore() => true; // Prevent ScriptBase from showing up as a plugin in Plugins tab
 
@@ -14,7 +17,7 @@ class ScriptBase : MVRScript
     public override void InitUI()
     {
         base.InitUI();
-        if(!UITransform || pluginUIEventsListener)
+        if(!UITransform || _pluginUIEventsListener)
         {
             return;
         }
@@ -30,18 +33,18 @@ class ScriptBase : MVRScript
 
     IEnumerator InitUICo()
     {
-        while(!initialized)
+        while(!IsInitialized)
         {
             yield return null;
         }
 
-        pluginUIEventsListener = UITransform.gameObject.AddComponent<UnityEventsListener>();
-        pluginUIEventsListener.onEnable.AddListener(() => StartCoroutine(OnUIEnabledCo(OnUIEnabled())));
+        _pluginUIEventsListener = UITransform.gameObject.AddComponent<UnityEventsListener>();
+        _pluginUIEventsListener.onEnable.AddListener(() => StartCoroutine(OnUIEnabledCo(OnUIEnabled())));
 
         var onUIDisabled = OnUIDisabled();
         if(onUIDisabled != null)
         {
-            pluginUIEventsListener.onDisable.AddListener(() => StartCoroutine(OnUIDisabledCo(onUIDisabled)));
+            _pluginUIEventsListener.onDisable.AddListener(() => StartCoroutine(OnUIDisabledCo(onUIDisabled)));
         }
     }
 
@@ -66,7 +69,7 @@ class ScriptBase : MVRScript
             yield return null;
             yield return null;
 
-            if(!initialized)
+            if(!IsInitialized)
             {
                 yield break;
             }
@@ -102,7 +105,7 @@ class ScriptBase : MVRScript
 
     protected void OnDestroy()
     {
-        DestroyImmediate(pluginUIEventsListener);
+        DestroyImmediate(_pluginUIEventsListener);
     }
 
 #endregion

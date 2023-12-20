@@ -127,7 +127,6 @@ static class MVRScriptExtensions
         else if(element is UIDynamicPopup)
         {
             script.RemovePopup((UIDynamicPopup) element);
-
         }
         else if(element is UIDynamicColorPicker)
         {

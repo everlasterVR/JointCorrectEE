@@ -89,7 +89,7 @@
     <Compile Include="src\UI\MainWindow.cs" />
     <Compile Include="src\UI\WindowBase.cs" />
     <Compile Include="src\Utils\Calc.cs" />
-    <Compile Include="src\Utils\Loggr.cs" />
+    <Compile Include="src\Utils\LogBuilder.cs" />
     <Compile Include="src\Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>

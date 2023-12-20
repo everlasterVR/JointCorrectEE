@@ -3,25 +3,25 @@ using UnityEngine.Events;
 
 sealed class UnityEventsListener : MonoBehaviour
 {
-    public bool isEnabled { get; private set; }
+    public bool IsEnabled { get; private set; }
     public readonly UnityEvent onEnable = new UnityEvent();
     public readonly UnityEvent onDisable = new UnityEvent();
 
     void OnEnable()
     {
-        isEnabled = true;
+        IsEnabled = true;
         onEnable.Invoke();
     }
 
     void OnDisable()
     {
-        isEnabled = false;
+        IsEnabled = false;
         onDisable.Invoke();
     }
 
     void OnDestroy()
     {
-        isEnabled = false;
+        IsEnabled = false;
         onEnable.RemoveAllListeners();
         onDisable.RemoveAllListeners();
     }
