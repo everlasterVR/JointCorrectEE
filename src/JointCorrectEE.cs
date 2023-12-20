@@ -43,6 +43,8 @@ sealed class JointCorrectEE : ScriptBase
     public Person Person { get; private set; }
     public BoneConfig[] BoneConfigs { get; private set; }
     public JSONStorableBool DisableCollarBreastJsb { get; private set; }
+    bool _isSavingScene;
+    bool _isUpdatePaused;
 
     IWindow _currentWindow;
     IWindow _mainWindow;
@@ -61,6 +63,7 @@ sealed class JointCorrectEE : ScriptBase
         try
         {
             InitMorphs();
+            SetupCallbacks();
             DisableCollarBreastJsb = this.NewJSONStorableBool("disableCollarBreastMorphs", true);
             _mainWindow = new MainWindow(this);
             isInitialized = true;
@@ -700,9 +703,53 @@ sealed class JointCorrectEE : ScriptBase
         }
     }
 
+    void SetupCallbacks()
+    {
+        SuperController.singleton.onBeforeSceneSaveHandlers += OnBeforeSceneSave;
+        SuperController.singleton.onSceneSavedHandlers += OnSceneSaved;
+    }
+
+    void OnBeforeSceneSave()
+    {
+        if(!isInitialized || !IsEnabledAndActive())
+        {
+            return;
+        }
+
+        try
+        {
+            _isSavingScene = true;
+            _isUpdatePaused = true;
+            ResetMorphs();
+        }
+        catch(Exception e)
+        {
+            logBuilder.Error("{0}: {1}", nameof(OnBeforeSceneSave), e);
+        }
+    }
+
+    void OnSceneSaved()
+    {
+        if(!isInitialized || !IsEnabledAndActive() || !_isSavingScene)
+        {
+            return;
+        }
+
+        try
+        {
+            _isSavingScene = false;
+            _isUpdatePaused = false;
+
+        }
+        catch(Exception e)
+        {
+            logBuilder.Error("{0}: {1}", nameof(OnSceneSaved), e);
+        }
+    }
+
     void Update()
     {
-        if(!isInitialized)
+        if(!isInitialized || _isUpdatePaused)
         {
             return;
         }
@@ -711,8 +758,7 @@ sealed class JointCorrectEE : ScriptBase
         {
             for(int i = 0; i < BoneConfigs.Length; i++)
             {
-                var config = BoneConfigs[i];
-                config.Update();
+                BoneConfigs[i].Update();
             }
         }
         catch(Exception e)
@@ -783,6 +829,14 @@ sealed class JointCorrectEE : ScriptBase
         sliderToJSONStorableFloat.Add(slider, jsf);
     }
 
+    void ResetMorphs()
+    {
+        for(int i = 0; i < BoneConfigs.Length; i++)
+        {
+            BoneConfigs[i].Reset();
+        }
+    }
+
     void OnDisable()
     {
         if(!isInitialized)
@@ -792,10 +846,7 @@ sealed class JointCorrectEE : ScriptBase
 
         try
         {
-            for(int i = 0; i < BoneConfigs.Length; i++)
-            {
-                BoneConfigs[i].Reset();
-            }
+            ResetMorphs();
         }
         catch(Exception e)
         {

@@ -23,6 +23,16 @@ static class AtomExtensions
     }
 }
 
+static class BehaviourExtensions
+{
+    public static bool IsEnabledNullSafe(this Behaviour behaviour) => behaviour && behaviour.enabled;
+}
+
+static class GameObjectExtensions
+{
+    internal static bool IsActiveInHierarchyNullSafe(this GameObject gameObject) => gameObject && gameObject.activeInHierarchy;
+}
+
 static class MonoBehaviourExtensions
 {
     public static T AddComponent<T>(this GameObject go, Action<T> callback) where T : MonoBehaviour

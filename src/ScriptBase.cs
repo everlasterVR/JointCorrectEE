@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,6 +18,9 @@ class ScriptBase : MVRScript
     bool _isUIOpened;
     UIDynamicTextField _postponedInfoField;
     Action _postponedActions;
+
+    [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+    public bool IsEnabledAndActive() => this.IsEnabledNullSafe() && gameObject.IsActiveInHierarchyNullSafe();
 
     void Start()
     {
