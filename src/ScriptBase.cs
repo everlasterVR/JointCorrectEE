@@ -12,8 +12,6 @@ class ScriptBase : MVRScript
 
     public override bool ShouldIgnore() => true; // Prevent ScriptBase from showing up as a plugin in Plugins tab
 
-#region *** Init UI ***
-
     public override void InitUI()
     {
         base.InitUI();
@@ -99,18 +97,8 @@ class ScriptBase : MVRScript
         callback();
     }
 
-#endregion
-
-#region *** Life cycle ***
-
     protected void OnDestroy()
     {
         DestroyImmediate(_pluginUIEventsListener);
     }
-
-#endregion
-
-#region *** JSON ***
-
-#endregion
 }

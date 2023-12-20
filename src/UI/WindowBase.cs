@@ -27,8 +27,6 @@ class WindowBase : IWindow
         nestedWindows = new List<IWindow>();
     }
 
-#region *** Common Elements ***
-
     protected void AddSpacer(int height, bool rightSide) =>
         AddElement(() => script.NewSpacer(height, rightSide));
 
@@ -133,8 +131,6 @@ class WindowBase : IWindow
         textField.UItext.fontSize = 26;
         return textField;
     }
-
-#endregion
 
     public void Build()
     {

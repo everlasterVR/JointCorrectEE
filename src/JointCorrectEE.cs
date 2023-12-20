@@ -15,8 +15,6 @@ sealed class JointCorrectEE : ScriptBase
 
     public override bool ShouldIgnore() => false;
 
-#region *** Init ***
-
     public override void Init()
     {
         try
@@ -684,8 +682,6 @@ sealed class JointCorrectEE : ScriptBase
             BoneConfigs[i].SetGroupMultiplierReferences();
         }
     }
-
-#endregion
 
     void Update()
     {
