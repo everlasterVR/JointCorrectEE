@@ -1,20 +1,18 @@
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-static partial class AtomExtensions
+static class AtomExtensions
 {
-    public static List<JSONStorable> FindStorablesByRegexMatch(this Atom atom, Regex regex) =>
-        FindStorablesByRegexMatchInternal(atom, regex).ToList().Prune();
-
-    static IEnumerable<JSONStorable> FindStorablesByRegexMatchInternal(Atom atom, Regex regex)
+    public static bool StorableExistsByRegexMatch(this Atom atom, Regex regex)
     {
         var storableIds = atom.GetStorableIDs();
-        foreach(string id in storableIds)
+        for(int i = 0; i < storableIds.Count; i++)
         {
-            if(regex.IsMatch(id))
+            if(regex.IsMatch(storableIds[i]))
             {
-                yield return atom.GetStorableByID(id);
+                return true;
             }
         }
+
+        return false;
     }
 }

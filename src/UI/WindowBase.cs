@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 class WindowBase : IWindow
 {
-    protected readonly MVRScript script;
+    protected readonly JointCorrectEE script;
     readonly string _id;
     public string GetId() => _id;
 
@@ -18,7 +18,7 @@ class WindowBase : IWindow
 
     readonly UnityAction _onReturnToParent;
 
-    protected WindowBase(MVRScript script, string id, UnityAction onReturnToParent = null)
+    protected WindowBase(JointCorrectEE script, string id, UnityAction onReturnToParent = null)
     {
         this.script = script;
         _id = id;
@@ -136,11 +136,11 @@ class WindowBase : IWindow
 
 #endregion
 
-    public void Rebuild()
+    public void Build()
     {
         if(activeNestedWindow != null)
         {
-            activeNestedWindow.Rebuild();
+            activeNestedWindow.Build();
         }
         else
         {
@@ -227,17 +227,17 @@ class WindowBase : IWindow
     protected void ClearSelf()
     {
         ClosePopupsSelf();
-        foreach(var element in _elements.ToList())
+        foreach(var pair in _elements)
         {
-            script.RemoveElement(element.Value);
+            script.RemoveElement(pair.Value);
         }
     }
 
     void ClosePopupsSelf()
     {
-        foreach(var element in _elements)
+        foreach(var pair in _elements)
         {
-            var uiDynamicPopup = element.Value as UIDynamicPopup;
+            var uiDynamicPopup = pair.Value as UIDynamicPopup;
             if(uiDynamicPopup)
             {
                 uiDynamicPopup.popup.visible = false;

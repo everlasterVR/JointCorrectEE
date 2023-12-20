@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections;
-using UnityEngine;
 using UnityEngine.UI;
 
 class ScriptBase : MVRScript
 {
+    public bool initialized { get; protected set; }
     UnityEventsListener pluginUIEventsListener { get; set; }
 
     public override bool ShouldIgnore() => true; // Prevent ScriptBase from showing up as a plugin in Plugins tab
@@ -30,14 +30,9 @@ class ScriptBase : MVRScript
 
     IEnumerator InitUICo()
     {
-        while(!JointCorrectEE.script || JointCorrectEE.script.initialized == null)
+        while(!initialized)
         {
             yield return null;
-        }
-
-        if(JointCorrectEE.script.initialized == false)
-        {
-            yield break;
         }
 
         pluginUIEventsListener = UITransform.gameObject.AddComponent<UnityEventsListener>();
@@ -71,12 +66,7 @@ class ScriptBase : MVRScript
             yield return null;
             yield return null;
 
-            while(initialized == null)
-            {
-                yield return null;
-            }
-
-            if(initialized == false)
+            if(!initialized)
             {
                 yield break;
             }
@@ -104,34 +94,6 @@ class ScriptBase : MVRScript
         }
 
         callback();
-    }
-
-#endregion
-
-#region *** Init ***
-
-    public bool? initialized { get; protected set; }
-
-    protected void FailInitWithMessage(string text)
-    {
-        Loggr.Message(text);
-        initialized = false;
-    }
-
-    protected void FailInitWithError(string text)
-    {
-        Loggr.Error(text);
-        SetGrayBackground();
-        CreateErrorTextField(text);
-        initialized = false;
-    }
-
-    void CreateErrorTextField(string text)
-    {
-        var errorJss = new JSONStorableString("Error", $"<b>{text}</b>");
-        var textField = CreateTextField(errorJss);
-        textField.height = Constant.UI_MAX_HEIGHT;
-        textField.backgroundColor = Color.clear;
     }
 
 #endregion

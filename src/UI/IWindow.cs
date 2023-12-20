@@ -4,7 +4,7 @@ interface IWindow
 
     IWindow GetActiveNestedWindow();
 
-    void Rebuild();
+    void Build();
 
     void Clear();
 

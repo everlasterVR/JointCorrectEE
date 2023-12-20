@@ -9,28 +9,13 @@ sealed class JointCorrectEE : ScriptBase
 {
     /* Public static access point to plugin instance. */
     public const string VERSION = "0.0.0";
-    public static bool envIsDevelopment { get; private set; }
-    public static JointCorrectEE script { get; private set; }
 
     public override bool ShouldIgnore() => false;
 
 #region *** Init ***
 
-    public static bool isInitialized => script.initialized == true;
-
     public override void Init()
     {
-        #if ENV_DEVELOPMENT
-        {
-            envIsDevelopment = true;
-        }
-        #else
-        {
-            envIsDevelopment = false;
-        }
-        #endif
-        script = this;
-
         try
         {
             /* Used to store version in save JSON and communicate version to other plugin instances */
@@ -43,13 +28,13 @@ sealed class JointCorrectEE : ScriptBase
              */
             if(containingAtom.type != "Person")
             {
-                FailInitWithMessage($"Add to a Person atom, not {containingAtom.type}.");
+                Loggr.Error($"Add to a Person atom, not {containingAtom.type}.");
                 return;
             }
 
-            if(containingAtom.FindStorablesByRegexMatch(Utils.Regex($@"^plugin#\d+_{nameof(JointCorrectEE)}")).Count > 0)
+            if(containingAtom.StorableExistsByRegexMatch(Utils.NewRegex($@"^plugin#\d+_{nameof(JointCorrectEE)}")))
             {
-                FailInitWithMessage($"An instance of {nameof(JointCorrectEE)} is already added.");
+                Loggr.Error($"An instance of {nameof(JointCorrectEE)} is already added.");
                 return;
             }
 
@@ -57,13 +42,12 @@ sealed class JointCorrectEE : ScriptBase
         }
         catch(Exception e)
         {
-            initialized = false;
             Loggr.Error($"Init: {e}");
         }
     }
 
-    public static Person person { get; private set; }
-    public static List<BoneConfig> boneConfigs { get; private set; }
+    public Person person { get; private set; }
+    public BoneConfig[] boneConfigs { get; private set; }
     public JSONStorableBool disableCollarBreastJsb { get; private set; }
 
     IWindow _mainWindow;
@@ -76,26 +60,19 @@ sealed class JointCorrectEE : ScriptBase
             yield return null;
         }
 
-        if(initialized == false)
-        {
-            yield break;
-        }
-
         yield return SetupPerson();
 
         try
         {
             InitMorphs();
             disableCollarBreastJsb = this.NewJSONStorableBool("disableCollarBreastMorphs", true);
-
-            _mainWindow = new MainWindow();
-            _mainWindow.Rebuild();
-
+            _mainWindow = new MainWindow(this);
+            _mainWindow.Build();
             initialized = true;
         }
         catch(Exception e)
         {
-            FailInitWithError($"Init error: {e}");
+            Loggr.Error($"Init error: {e}");
         }
     }
 
@@ -106,7 +83,7 @@ sealed class JointCorrectEE : ScriptBase
         yield return person.WaitForGeometryReady(limit);
         if(!person.geometryReady)
         {
-            FailInitWithError(
+            Loggr.Error(
                 $"Selected character {person.geometry.selectedCharacter.name} was not ready after {limit.ToString()} seconds of waiting"
             );
             yield break;
@@ -118,14 +95,14 @@ sealed class JointCorrectEE : ScriptBase
         }
         catch(Exception e)
         {
-            FailInitWithError($"Person setup error: {e}");
+            Loggr.Error($"Person setup error: {e}");
         }
     }
 
     public void RebuildMainWindow()
     {
         _mainWindow.Clear();
-        _mainWindow.Rebuild();
+        _mainWindow.Build();
     }
 
     void InitMorphs()
@@ -683,7 +660,7 @@ sealed class JointCorrectEE : ScriptBase
         }
 
         /* Order matters for UI */
-        boneConfigs = new List<BoneConfig>
+        boneConfigs = new []
         {
             headConfig,
             neckConfig,
@@ -701,9 +678,9 @@ sealed class JointCorrectEE : ScriptBase
             feetConfig,
         };
 
-        foreach(var config in boneConfigs)
+        for(int i = 0; i < boneConfigs.Length; i++)
         {
-            config.SetGroupMultiplierReferences();
+            boneConfigs[i].SetGroupMultiplierReferences();
         }
     }
 
@@ -711,18 +688,18 @@ sealed class JointCorrectEE : ScriptBase
 
     void Update()
     {
-        if(initialized != true)
+        if(!initialized)
         {
             return;
         }
 
-        foreach(var config in boneConfigs)
-        {
-            config.Update();
-        }
-
         try
         {
+            for(int i = 0; i < boneConfigs.Length; i++)
+            {
+                var config = boneConfigs[i];
+                config.Update();
+            }
         }
         catch(Exception e)
         {
@@ -771,14 +748,9 @@ sealed class JointCorrectEE : ScriptBase
         bool setMissingToDefault
     )
     {
-        while(initialized == null)
+        while(!initialized)
         {
             yield return null;
-        }
-
-        if(initialized == false)
-        {
-            yield break;
         }
 
         base.RestoreFromJSON(jsonClass, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
@@ -804,7 +776,7 @@ sealed class JointCorrectEE : ScriptBase
 
     void OnEnable()
     {
-        if(initialized != true)
+        if(!initialized)
         {
             return;
         }
@@ -820,16 +792,16 @@ sealed class JointCorrectEE : ScriptBase
 
     void OnDisable()
     {
-        if(initialized != true)
+        if(!initialized)
         {
             return;
         }
 
         try
         {
-            foreach(var config in boneConfigs)
+            for(int i = 0; i < boneConfigs.Length; i++)
             {
-                config.Reset();
+                boneConfigs[i].Reset();
             }
         }
         catch(Exception e)
@@ -843,16 +815,12 @@ sealed class JointCorrectEE : ScriptBase
         try
         {
             base.OnDestroy();
-            /* Nullify static reference fields to let GC collect unreachable instances */
-            person = null;
-            boneConfigs = null;
-            script = null;
         }
         catch(Exception e)
         {
-            if(initialized == true)
+            if(initialized)
             {
-                SuperController.LogError($"OnDestroy: {e}");
+                SuperController.LogError($"{nameof(OnDestroy)}: {e}");
             }
             else
             {

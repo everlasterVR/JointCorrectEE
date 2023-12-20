@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-static partial class ListExtensions
+static class ListExtensions
 {
     public static List<JSONStorable> Prune(this List<JSONStorable> list)
     {

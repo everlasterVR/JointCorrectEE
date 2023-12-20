@@ -1,46 +1,12 @@
-// ReSharper disable MemberCanBePrivate.Global UnusedMember.Global UnusedMethodReturnValue.Global UnusedType.Global
-using System;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
-static partial class MVRScriptExtensions
+static class MVRScriptExtensions
 {
-    public static string GetPackagePath(this MVRScript script)
-    {
-        string packageId = script.GetPackageId();
-        return packageId == null ? "" : $"{packageId}:/";
-    }
-
-    //MacGruber / Discord 20.10.2020
-    //Get path prefix of the package that contains this plugin
-    public static string GetPackageId(this MVRScript script)
-    {
-        string id = script.name.Substring(0, script.name.IndexOf('_'));
-        string filename = script.manager.GetJSON()["plugins"][id].Value;
-        int idx = filename.IndexOf(":/", StringComparison.Ordinal);
-        return idx >= 0 ? filename.Substring(0, idx) : null;
-    }
-
     public static Transform InstantiateTextField(this MVRScript script, Transform parent = null) =>
-        UnityEngine.Object.Instantiate(script.manager.configurableTextFieldPrefab, parent, false);
+        Object.Instantiate(script.manager.configurableTextFieldPrefab, parent, false);
 
-    public static Transform InstantiateButton(this MVRScript script, Transform parent = null) =>
-        UnityEngine.Object.Instantiate(script.manager.configurableButtonPrefab, parent, false);
-
-    public static Transform InstantiateSlider(this MVRScript script, Transform parent = null) =>
-        UnityEngine.Object.Instantiate(script.manager.configurableSliderPrefab, parent, false);
-
-    public static Transform InstantiateToggle(this MVRScript script, Transform parent = null) =>
-        UnityEngine.Object.Instantiate(script.manager.configurableTogglePrefab, parent, false);
-
-    public static Transform InstantiatePopup(this MVRScript script, Transform parent = null) =>
-        UnityEngine.Object.Instantiate(script.manager.configurablePopupPrefab, parent, false);
-
-    public static Transform InstantiateColorPicker(this MVRScript script, Transform parent = null) =>
-        UnityEngine.Object.Instantiate(script.manager.configurableColorPickerPrefab, parent, false);
-
-    public static Transform InstantiateSpacer(this MVRScript script, Transform parent = null) =>
-        UnityEngine.Object.Instantiate(script.manager.configurableSpacerPrefab, parent, false);
-
+    [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
     public static JSONStorableString NewJSONStorableString(
         this MVRScript script,
         string paramName,
@@ -48,8 +14,10 @@ static partial class MVRScriptExtensions
         bool shouldRegister = true
     )
     {
-        var storable = new JSONStorableString(paramName, startingValue);
-        storable.storeType = JSONStorableParam.StoreType.Full;
+        var storable = new JSONStorableString(paramName, startingValue)
+        {
+            storeType = JSONStorableParam.StoreType.Full,
+        };
         if(shouldRegister)
         {
             script.RegisterString(storable);
@@ -65,8 +33,10 @@ static partial class MVRScriptExtensions
         bool shouldRegister = true
     )
     {
-        var storable = new JSONStorableBool(paramName, startingValue);
-        storable.storeType = JSONStorableParam.StoreType.Full;
+        var storable = new JSONStorableBool(paramName, startingValue)
+        {
+            storeType = JSONStorableParam.StoreType.Full,
+        };
         if(shouldRegister)
         {
             script.RegisterBool(storable);
@@ -89,22 +59,6 @@ static partial class MVRScriptExtensions
         if(shouldRegister)
         {
             script.RegisterFloat(storable);
-        }
-
-        return storable;
-    }
-
-    public static JSONStorableAction NewJSONStorableAction(
-        this MVRScript script,
-        string paramName,
-        JSONStorableAction.ActionCallback callback,
-        bool shouldRegister = true
-    )
-    {
-        var storable = new JSONStorableAction(paramName, callback);
-        if(shouldRegister)
-        {
-            script.RegisterAction(storable);
         }
 
         return storable;

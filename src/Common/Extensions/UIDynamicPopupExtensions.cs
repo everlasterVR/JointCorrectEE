@@ -1,6 +1,6 @@
 ﻿using UnityEngine.UI;
 
-static partial class UIDynamicPopupExtensions
+static class UIDynamicPopupExtensions
 {
     public static void SetInteractable(this UIDynamicPopup popup, bool interactable)
     {

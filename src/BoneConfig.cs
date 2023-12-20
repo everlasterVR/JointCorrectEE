@@ -11,17 +11,17 @@ sealed class BoneConfig
 
     public void Reset()
     {
-        foreach(var config in morphConfigs)
+        for(int i = 0; i < morphConfigs.Count; i++)
         {
-            config.morph.morphValue = 0;
+            morphConfigs[i].morph.morphValue = 0;
         }
     }
 
     public void SetGroupMultiplierReferences()
     {
-        foreach(var config in morphConfigs)
+        for(int i = 0; i < morphConfigs.Count; i++)
         {
-            config.groupMultiplierJsf = multiplierJsf;
+            morphConfigs[i].groupMultiplierJsf = multiplierJsf;
         }
     }
 }

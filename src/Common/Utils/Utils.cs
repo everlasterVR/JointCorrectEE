@@ -10,5 +10,5 @@ static class Utils
         return transform;
     }
 
-    public static Regex Regex(string regexStr) => new Regex(regexStr, RegexOptions.Compiled);
+    public static Regex NewRegex(string regexStr) => new Regex(regexStr, RegexOptions.Compiled);
 }

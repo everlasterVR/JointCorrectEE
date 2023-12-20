@@ -80,7 +80,6 @@
     <Compile Include="src\BoneConfig.cs" />
     <Compile Include="src\Common\Components\UnityEventsListener.cs" />
     <Compile Include="src\Common\Extensions\AtomExtensions.cs" />
-    <Compile Include="src\Common\Extensions\JSONStorableExtensions.cs" />
     <Compile Include="src\Common\Extensions\ListExtensions.cs" />
     <Compile Include="src\Common\Extensions\MVRScriptExtensions.cs" />
     <Compile Include="src\Common\Extensions\StringExtensions.cs" />
