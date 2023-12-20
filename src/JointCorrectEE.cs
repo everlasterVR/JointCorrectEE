@@ -22,7 +22,13 @@ sealed class JointCorrectEE : ScriptBase
 
             if(containingAtom.StorableExistsByRegexMatch(Utils.NewRegex($@"^plugin#\d+_{nameof(JointCorrectEE)}")))
             {
-                logBuilder.ErrorNoReport("An instance of {0} is already added.", nameof(JointCorrectEE));
+                logBuilder.ErrorNoReport("{0} is already added.", nameof(JointCorrectEE));
+                return;
+            }
+
+            if(containingAtom.StorableExistsByRegexMatch(Utils.NewRegex(@"^plugin#\d+_JointCorrect.JointCorrect")))
+            {
+                logBuilder.ErrorNoReport("Person already has an instance of Joint Correct - remove it and then reload {0}", nameof(JointCorrectEE));
                 return;
             }
 
