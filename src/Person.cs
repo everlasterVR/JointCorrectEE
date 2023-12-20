@@ -43,7 +43,7 @@ sealed class Person
         var dazMorph = morphsControlUI.GetMorphByUid(uid);
         if(dazMorph == null)
         {
-            Loggr.Error($"Morph with uid '{uid}' not found!");
+            new LogBuilder().Error("Morph with uid '{0}' not found", uid);
         }
 
         return dazMorph;

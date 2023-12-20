@@ -7,8 +7,8 @@ using UnityEngine;
 
 sealed class JointCorrectEE : ScriptBase
 {
-    /* Public static access point to plugin instance. */
     public const string VERSION = "0.0.0";
+    public readonly LogBuilder logBuilder = new LogBuilder();
 
     public override bool ShouldIgnore() => false;
 
@@ -19,7 +19,7 @@ sealed class JointCorrectEE : ScriptBase
         try
         {
             /* Used to store version in save JSON and communicate version to other plugin instances */
-            this.NewJSONStorableString(Constant.VERSION, VERSION);
+            this.NewJSONStorableString(Strings.VERSION, VERSION);
 
             /*
              * Restrict which atom types the plugin can be loaded onto.
@@ -28,13 +28,13 @@ sealed class JointCorrectEE : ScriptBase
              */
             if(containingAtom.type != "Person")
             {
-                Loggr.Error($"Add to a Person atom, not {containingAtom.type}.");
+                logBuilder.ErrorNoReport("Add to a Person atom, not {0}.", containingAtom.type);
                 return;
             }
 
             if(containingAtom.StorableExistsByRegexMatch(Utils.NewRegex($@"^plugin#\d+_{nameof(JointCorrectEE)}")))
             {
-                Loggr.Error($"An instance of {nameof(JointCorrectEE)} is already added.");
+                logBuilder.ErrorNoReport("An instance of {0} is already added.", nameof(JointCorrectEE));
                 return;
             }
 
@@ -42,7 +42,7 @@ sealed class JointCorrectEE : ScriptBase
         }
         catch(Exception e)
         {
-            Loggr.Error($"Init: {e}");
+            logBuilder.Error("{0}: {1}", nameof(Init), e);
         }
     }
 
@@ -72,7 +72,7 @@ sealed class JointCorrectEE : ScriptBase
         }
         catch(Exception e)
         {
-            Loggr.Error($"Init error: {e}");
+            logBuilder.Error("{0}: {1}", nameof(InitCo), e);
         }
     }
 
@@ -83,9 +83,7 @@ sealed class JointCorrectEE : ScriptBase
         yield return person.WaitForGeometryReady(limit);
         if(!person.geometryReady)
         {
-            Loggr.Error(
-                $"Selected character {person.geometry.selectedCharacter.name} was not ready after {limit.ToString()} seconds of waiting"
-            );
+            logBuilder.Error("Selected character {0} was not ready after {1} seconds of waiting", person.geometry.selectedCharacter.name, limit);
             yield break;
         }
 
@@ -95,7 +93,7 @@ sealed class JointCorrectEE : ScriptBase
         }
         catch(Exception e)
         {
-            Loggr.Error($"Person setup error: {e}");
+            logBuilder.Error("{0}: {1}", nameof(SetupPerson), e);
         }
     }
 
@@ -703,7 +701,7 @@ sealed class JointCorrectEE : ScriptBase
         }
         catch(Exception e)
         {
-            Loggr.Error($"{nameof(Update)} error: {e}");
+            logBuilder.Error("{0}: {1}", nameof(Update), e);
         }
     }
 
@@ -724,9 +722,9 @@ sealed class JointCorrectEE : ScriptBase
         /* Prevent overriding versionJss.val from JSON. Version stored in JSON just for information,
          * but could be intercepted here and used to save a "loadedFromVersion" value.
          */
-        if(jsonClass.HasKey(Constant.VERSION))
+        if(jsonClass.HasKey(Strings.VERSION))
         {
-            jsonClass[Constant.VERSION] = VERSION;
+            jsonClass[Strings.VERSION] = VERSION;
         }
 
         StartCoroutine(
@@ -786,7 +784,7 @@ sealed class JointCorrectEE : ScriptBase
         }
         catch(Exception e)
         {
-            Loggr.Error($"{nameof(OnEnable)} error: {e}");
+            logBuilder.Error("{0}: {1}", nameof(OnEnable), e);
         }
     }
 
@@ -806,7 +804,7 @@ sealed class JointCorrectEE : ScriptBase
         }
         catch(Exception e)
         {
-            Loggr.Error($"{nameof(OnDisable)} error: {e}");
+            logBuilder.Error("{0}: {1}", nameof(OnDisable), e);
         }
     }
 
