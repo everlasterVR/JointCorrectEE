@@ -5,7 +5,7 @@ sealed class MorphConfig
     DAZMorph _dazMorph;
     readonly string _uid;
     readonly DAZMorphBank _morphBank;
-    public JSONStorableFloat groupMultiplierJsf;
+    public JSONStorableFloat groupMultiplierFloat;
     bool _enabled = true;
 
     public MorphConfig(DAZMorph dazMorph)
@@ -18,7 +18,7 @@ sealed class MorphConfig
     public void Update(float value, float min, float max)
     {
         value = Calc.NormalizeFloat(value, min, max);
-        SetValue(groupMultiplierJsf.val * value);
+        SetValue(groupMultiplierFloat.val * value);
     }
 
     void SetValue(float value)

@@ -18,13 +18,13 @@ sealed class MainWindow : WindowBase
 
         foreach(var config in script.BoneConfigs.Take(7))
         {
-            AddElement(() => MultiplierSlider(config.multiplierJsf, rightSide));
+            AddElement(() => MultiplierSlider(config.multiplierFloat, rightSide));
         }
 
         AddElement(
             () =>
             {
-                var toggle = script.CreateToggle(script.DisableCollarBreastJsb, rightSide);
+                var toggle = script.CreateToggle(script.DisableCollarBreastBool, rightSide);
                 toggle.label = "Disable Collar Bone Morphs Affecting Breast Vertices";
                 toggle.height = 80;
                 return toggle;
@@ -43,7 +43,7 @@ sealed class MainWindow : WindowBase
 
         foreach(var config in script.BoneConfigs.Skip(7))
         {
-            AddElement(() => MultiplierSlider(config.multiplierJsf, rightSide));
+            AddElement(() => MultiplierSlider(config.multiplierFloat, rightSide));
         }
 
         /* Version text field */

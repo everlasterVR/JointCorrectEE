@@ -13,7 +13,7 @@ sealed class JointCorrectEE : ScriptBase
     {
         try
         {
-            this.NewJSONStorableString(Strings.VERSION, VERSION);
+            new StorableString(Strings.VERSION, VERSION).RegisterTo(this);
             if(containingAtom.type != "Person")
             {
                 logBuilder.ErrorNoReport("Add to a Person atom, not {0}.", containingAtom.type);
@@ -42,7 +42,7 @@ sealed class JointCorrectEE : ScriptBase
 
     public Person Person { get; private set; }
     public BoneConfig[] BoneConfigs { get; private set; }
-    public JSONStorableBool DisableCollarBreastJsb { get; private set; }
+    public StorableBool DisableCollarBreastBool { get; private set; }
     bool _isSavingScene;
     bool _isUpdatePaused;
 
@@ -64,7 +64,8 @@ sealed class JointCorrectEE : ScriptBase
         {
             InitMorphs();
             SetupCallbacks();
-            DisableCollarBreastJsb = this.NewJSONStorableBool("disableCollarBreastMorphs", true);
+            DisableCollarBreastBool = new StorableBool("disableCollarBreastMorphs", true);
+            DisableCollarBreastBool.RegisterTo(this);
             _mainWindow = new MainWindow(this);
             isInitialized = true;
         }
@@ -176,7 +177,7 @@ sealed class JointCorrectEE : ScriptBase
                     rCollarZn050,
                     rCollarZp015,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Collar Bones", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Collar Bones", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var lAngles = left.GetAnglesDegrees();
@@ -201,7 +202,7 @@ sealed class JointCorrectEE : ScriptBase
                     rCollarZp015.Update(rAngles.z, 0, -15);
 
                     /* These morphs visibly affect breast vertices that have soft physics joints */
-                    if(!DisableCollarBreastJsb.val)
+                    if(!DisableCollarBreastBool.val)
                     {
                         // Note: Y Inverted
                         lCollarYn026.Update(lAngles.y, 0, 26); // problematic
@@ -245,7 +246,7 @@ sealed class JointCorrectEE : ScriptBase
                     rFootXp065,
                     rFootXn040,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Feet", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Feet", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var lAngls = left.GetAnglesDegrees();
@@ -278,7 +279,7 @@ sealed class JointCorrectEE : ScriptBase
                     rForearmYp100,
                     rForearmYp130,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Forearms", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Forearms", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var lAngles = lForearmBone.GetAnglesDegrees();
@@ -309,7 +310,7 @@ sealed class JointCorrectEE : ScriptBase
                     lHandZp080,
                     rHandZn080,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Hands", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Hands", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var lAngles = left.GetAnglesDegrees();
@@ -340,7 +341,7 @@ sealed class JointCorrectEE : ScriptBase
                     rShinXp085,
                     rShinXp140,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Shins", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Shins", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var lAngles = left.GetAnglesDegrees();
@@ -385,7 +386,7 @@ sealed class JointCorrectEE : ScriptBase
                     rShldrYn040,
                     rShldrYp095,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Shoulders", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Shoulders", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var lAngles = left.GetAnglesDegrees();
@@ -457,7 +458,7 @@ sealed class JointCorrectEE : ScriptBase
                     cThighZp180,
                     cThighXn115,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Thighs", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Thighs", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var lAngles = left.GetAnglesDegrees();
@@ -519,7 +520,7 @@ sealed class JointCorrectEE : ScriptBase
                     cThighZn030Gens,
                     cThighXn115Gens,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Genitals", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Genitals", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var lAngles = left.GetAnglesDegrees();
@@ -553,7 +554,7 @@ sealed class JointCorrectEE : ScriptBase
                     pelvisXp030,
                     pelvisXn015,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Pelvis", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Pelvis", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var angles = bone.GetAnglesDegrees();
@@ -576,7 +577,7 @@ sealed class JointCorrectEE : ScriptBase
                     abdomenXn020,
                     abdomenXp030,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Abdomen", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Abdomen", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var angles = bone.GetAnglesDegrees();
@@ -599,7 +600,7 @@ sealed class JointCorrectEE : ScriptBase
                     abdomen2Xn020,
                     abdomen2Xp030,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Abdomen2", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Abdomen2", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var angles = bone.GetAnglesDegrees();
@@ -620,7 +621,7 @@ sealed class JointCorrectEE : ScriptBase
                 {
                     chestXp020,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Chest", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Chest", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var angles = bone.GetAnglesDegrees();
@@ -644,7 +645,7 @@ sealed class JointCorrectEE : ScriptBase
                     neckYp035,
                     neckYn035,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Neck", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Neck", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var angles = bone.GetAnglesDegrees();
@@ -668,7 +669,7 @@ sealed class JointCorrectEE : ScriptBase
                     headXn045,
                     headXp035,
                 },
-                multiplierJsf = this.NewJSONStorableFloat("Head", 1, 0, 2),
+                multiplierFloat = new StorableFloat("Head", 1, 0, 2),
                 driver = multiplier =>
                 {
                     var angles = bone.GetAnglesDegrees();
@@ -699,7 +700,9 @@ sealed class JointCorrectEE : ScriptBase
 
         for(int i = 0; i < BoneConfigs.Length; i++)
         {
-            BoneConfigs[i].SetGroupMultiplierReferences();
+            var boneConfig = BoneConfigs[i];
+            boneConfig.SetGroupMultiplierReferences();
+            boneConfig.multiplierFloat.RegisterTo(this);
         }
     }
 
@@ -815,18 +818,6 @@ sealed class JointCorrectEE : ScriptBase
     {
         jss.dynamicText = textField;
         textFieldToJSONStorableString.Add(textField, jss);
-    }
-
-    public void AddToggleToJsb(UIDynamicToggle toggle, JSONStorableBool jsb)
-    {
-        jsb.toggle = toggle.toggle;
-        toggleToJSONStorableBool.Add(toggle, jsb);
-    }
-
-    public void AddSliderToJsf(UIDynamicSlider slider, JSONStorableFloat jsf)
-    {
-        jsf.slider = slider.slider;
-        sliderToJSONStorableFloat.Add(slider, jsf);
     }
 
     void ResetMorphs()
