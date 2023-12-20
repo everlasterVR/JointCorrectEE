@@ -9,6 +9,7 @@ class ScriptBase : MVRScript
     public const string VERSION = "0.0.0";
     internal readonly LogBuilder logBuilder = new LogBuilder();
     protected bool isInitialized;
+    protected bool isRestoringFromJSON;
     UnityEventsListener _pluginUIEventsListener;
     bool _inEnabledCo;
     bool _isUIBuilt;

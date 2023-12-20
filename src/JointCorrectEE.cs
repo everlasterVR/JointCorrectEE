@@ -694,36 +694,30 @@ sealed class JointCorrectEE : ScriptBase
     }
 
     public override void RestoreFromJSON(
-        JSONClass jsonClass,
+        JSONClass jc,
         bool restorePhysical = true,
         bool restoreAppearance = true,
         JSONArray presetAtoms = null,
         bool setMissingToDefault = true
     )
     {
+        isRestoringFromJSON = true;
+
         /* Disable early to allow correct enabled value to be used during Init */
-        if(jsonClass.HasKey("enabled") && !jsonClass["enabled"].AsBool)
+        if(jc.HasKey("enabled") && !jc["enabled"].AsBool)
         {
-            enabled = false;
+            enabledJSON.val = false;
         }
 
         /* Prevent overriding versionJss.val from JSON. Version stored in JSON just for information,
          * but could be intercepted here and used to save a "loadedFromVersion" value.
          */
-        if(jsonClass.HasKey(Strings.VERSION))
+        if(jc.HasKey(Strings.VERSION))
         {
-            jsonClass[Strings.VERSION] = VERSION;
+            jc[Strings.VERSION] = VERSION;
         }
 
-        StartCoroutine(
-            RestoreFromJSONCo(
-                jsonClass,
-                restorePhysical,
-                restoreAppearance,
-                presetAtoms,
-                setMissingToDefault
-            )
-        );
+        StartCoroutine(RestoreFromJSONCo(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault));
     }
 
     IEnumerator RestoreFromJSONCo(
@@ -740,6 +734,7 @@ sealed class JointCorrectEE : ScriptBase
         }
 
         base.RestoreFromJSON(jsonClass, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
+        isRestoringFromJSON = false;
     }
 
     public void AddTextFieldToJss(UIDynamicTextField textField, JSONStorableString jss)
