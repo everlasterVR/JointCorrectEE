@@ -33,7 +33,7 @@ sealed class JointCorrectEE : ScriptBase
                 return;
             }
 
-            StartCoroutine(InitCo());
+            StartOrPostponeCoroutine(InitCo());
         }
         catch(Exception e)
         {
@@ -45,7 +45,9 @@ sealed class JointCorrectEE : ScriptBase
     public BoneConfig[] BoneConfigs { get; private set; }
     public JSONStorableBool DisableCollarBreastJsb { get; private set; }
 
+    IWindow _currentWindow;
     IWindow _mainWindow;
+    IWindow _inactiveWindow;
 
     IEnumerator InitCo()
     {
@@ -91,7 +93,34 @@ sealed class JointCorrectEE : ScriptBase
         }
     }
 
-    protected override void BuildUI() => _mainWindow.Build();
+    protected override void GoToMainWindow()
+    {
+        if(_currentWindow == _mainWindow)
+        {
+            return;
+        }
+
+        _inactiveWindow?.Clear();
+        _mainWindow.Build();
+        _currentWindow = _mainWindow;
+    }
+
+    protected override void GoToInactiveWindow()
+    {
+        if(_currentWindow == _inactiveWindow)
+        {
+            return;
+        }
+
+        if(_inactiveWindow == null)
+        {
+            _inactiveWindow = new InactiveWindow(this);
+        }
+
+        _mainWindow?.Clear();
+        _inactiveWindow.Build();
+        _currentWindow = _inactiveWindow;
+    }
 
     void InitMorphs()
     {
@@ -717,7 +746,7 @@ sealed class JointCorrectEE : ScriptBase
             jc[Strings.VERSION] = VERSION;
         }
 
-        StartCoroutine(RestoreFromJSONCo(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault));
+        StartOrPostponeCoroutine(RestoreFromJSONCo(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault));
     }
 
     IEnumerator RestoreFromJSONCo(

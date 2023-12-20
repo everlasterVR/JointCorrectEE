@@ -123,7 +123,7 @@ class WindowBase : IWindow
         rectTransform.pivot = new Vector2(0, 0);
         rectTransform.anchoredPosition = new Vector2(550, -1222);
         rectTransform.sizeDelta = new Vector2(-556, 42);
-        jss.val = $"{nameof(JointCorrectEE)} v{JointCorrectEE.VERSION}";
+        jss.val = $"{nameof(JointCorrectEE)} v{ScriptBase.VERSION}";
         var textField = fieldTransform.GetComponent<UIDynamicTextField>();
         textField.text = jss.val;
         textField.backgroundColor = Color.clear;
@@ -220,7 +220,7 @@ class WindowBase : IWindow
         OnClose();
     }
 
-    protected void ClearSelf()
+    void ClearSelf()
     {
         ClosePopupsSelf();
         foreach(var pair in _elements)

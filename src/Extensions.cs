@@ -23,6 +23,16 @@ static class AtomExtensions
     }
 }
 
+static class MonoBehaviourExtensions
+{
+    public static T AddComponent<T>(this GameObject go, Action<T> callback) where T : MonoBehaviour
+    {
+        var component = go.AddComponent<T>();
+        callback(component);
+        return component;
+    }
+}
+
 static class MVRScriptExtensions
 {
     public static Transform InstantiateTextField(this MVRScript script, Transform parent = null) =>
@@ -106,35 +116,40 @@ static class MVRScriptExtensions
 
     public static void RemoveElement(this MVRScript script, UIDynamic element)
     {
-        if(element is UIDynamicTextField)
+        try
         {
-            script.RemoveTextField((UIDynamicTextField) element);
+            if(element is UIDynamicTextField)
+            {
+                script.RemoveTextField((UIDynamicTextField) element);
+            }
+            else if(element is UIDynamicButton)
+            {
+                script.RemoveButton((UIDynamicButton) element);
+            }
+            else if(element is UIDynamicSlider)
+            {
+                script.RemoveSlider((UIDynamicSlider) element);
+            }
+            else if(element is UIDynamicToggle)
+            {
+                script.RemoveToggle((UIDynamicToggle) element);
+            }
+            else if(element is UIDynamicPopup)
+            {
+                script.RemovePopup((UIDynamicPopup) element);
+            }
+            else if(element is UIDynamicColorPicker)
+            {
+                script.RemoveColorPicker((UIDynamicColorPicker) element);
+            }
+            else
+            {
+                script.RemoveSpacer(element);
+            }
         }
-        else if(element is UIDynamicButton)
+        catch(Exception e)
         {
-            script.RemoveButton((UIDynamicButton) element);
-        }
-        else if(element is UIDynamicSlider)
-        {
-            script.RemoveSlider((UIDynamicSlider) element);
-
-        }
-        else if(element is UIDynamicToggle)
-        {
-            script.RemoveToggle((UIDynamicToggle) element);
-
-        }
-        else if(element is UIDynamicPopup)
-        {
-            script.RemovePopup((UIDynamicPopup) element);
-        }
-        else if(element is UIDynamicColorPicker)
-        {
-            script.RemoveColorPicker((UIDynamicColorPicker) element);
-        }
-        else
-        {
-            script.RemoveSpacer(element);
+            Debug.LogError($"RemoveElement failed for {element.name}: {e}");
         }
     }
 }

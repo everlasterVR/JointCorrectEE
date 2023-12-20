@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
 
 class ScriptBase : MVRScript
@@ -10,9 +11,33 @@ class ScriptBase : MVRScript
     internal readonly LogBuilder logBuilder = new LogBuilder();
     protected bool isInitialized;
     protected bool isRestoringFromJSON;
+    UnityEventsListener _parentObjectEventsListener;
     UnityEventsListener _pluginUIEventsListener;
     bool _inEnabledCo;
-    bool _isUIBuilt;
+    bool _isUIOpened;
+    UIDynamicTextField _postponedInfoField;
+    Action _postponedActions;
+
+    void Start()
+    {
+        _postponedActions?.Invoke();
+        _postponedActions = null;
+
+        if(_parentObjectEventsListener == null)
+        {
+            _parentObjectEventsListener = transform.parent.gameObject.AddComponent<UnityEventsListener>(listener =>
+            {
+                listener.disabledHandlers += GoToInactiveWindow;
+                listener.enabledHandlers += () =>
+                {
+                    if(_isUIOpened && isInitialized)
+                    {
+                        GoToMainWindow();
+                    }
+                };
+            });
+        }
+    }
 
     public override void InitUI()
     {
@@ -28,6 +53,29 @@ class ScriptBase : MVRScript
         }
 
         SetGrayBackground();
+
+        if(gameObject.activeInHierarchy)
+        {
+            CreatePluginUIEventsListener();
+        }
+        else
+        {
+            _postponedInfoField = CreateTextField(new JSONStorableString("info", "<b>Enable the atom to initialize.</b>"));
+            _postponedInfoField.backgroundColor = Color.clear;
+            _postponedActions += () =>
+            {
+                if(_postponedInfoField != null)
+                {
+                    RemoveTextField(_postponedInfoField);
+                }
+
+                CreatePluginUIEventsListener();
+            };
+        }
+    }
+
+    void CreatePluginUIEventsListener()
+    {
         if(!_pluginUIEventsListener)
         {
             _pluginUIEventsListener = UITransform.gameObject.AddComponent<UnityEventsListener>();
@@ -41,10 +89,19 @@ class ScriptBase : MVRScript
         background.color = Colors.backgroundGray;
     }
 
-    void OnUIEnabled() => StartCoroutine(OnUIEnabledCo());
+    void OnUIEnabled()
+    {
+        if(gameObject.activeInHierarchy)
+        {
+            StartCoroutine(OnUIEnabledCo());
+        }
+        else
+        {
+            GoToInactiveWindow();
+        }
+    }
 
-
-    IEnumerator OnUIEnabledCo(Action callback = null)
+    IEnumerator OnUIEnabledCo()
     {
         if(_inEnabledCo)
         {
@@ -54,33 +111,48 @@ class ScriptBase : MVRScript
             yield break;
         }
 
-        while(!isInitialized)
-        {
-            yield return null;
-        }
-
         _inEnabledCo = true;
         while(!isInitialized)
         {
             yield return null;
         }
 
-        if(!_isUIBuilt)
+        if(!_isUIOpened)
         {
-            BuildUI();
-            _isUIBuilt = true;
+            GoToMainWindow();
+            _isUIOpened = true;
         }
 
         _inEnabledCo = false;
     }
 
-    protected virtual void BuildUI()
+    protected virtual void GoToMainWindow()
     {
+    }
+
+    protected virtual void GoToInactiveWindow()
+    {
+    }
+
+    protected void StartOrPostponeCoroutine(IEnumerator coroutine, Action onPostpone = null)
+    {
+        if(gameObject.activeInHierarchy)
+        {
+            StartCoroutine(coroutine);
+        }
+        else
+        {
+            onPostpone?.Invoke();
+            _postponedActions += () => StartCoroutine(coroutine);
+        }
     }
 
     protected void BaseDestroy()
     {
         DestroyImmediate(_pluginUIEventsListener);
         _pluginUIEventsListener = null;
+
+        DestroyImmediate(_parentObjectEventsListener);
+        _parentObjectEventsListener = null;
     }
 }
