@@ -46,9 +46,9 @@ sealed class JointCorrectEE : ScriptBase
     bool _isSavingScene;
     bool _isUpdatePaused;
 
-    IWindow _currentWindow;
-    IWindow _mainWindow;
-    IWindow _inactiveWindow;
+    WindowBase _currentWindow;
+    WindowBase _mainWindow;
+    WindowBase _inactiveWindow;
 
     IEnumerator InitCo()
     {
@@ -98,14 +98,14 @@ sealed class JointCorrectEE : ScriptBase
 
     protected override void GoToMainWindow()
     {
-        if(_currentWindow == _mainWindow)
+        if(_currentWindow != _mainWindow)
         {
-            return;
+            _inactiveWindow?.Clear();
+            _mainWindow.Build();
+            _currentWindow = _mainWindow;
         }
 
-        _inactiveWindow?.Clear();
-        _mainWindow.Build();
-        _currentWindow = _mainWindow;
+        (_mainWindow as MainWindow)?.UpdateGenitalsSlider();
     }
 
     protected override void GoToInactiveWindow()

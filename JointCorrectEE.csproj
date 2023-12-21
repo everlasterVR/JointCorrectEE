@@ -89,7 +89,6 @@
     <Compile Include="src\Storables\StorableFloat.cs" />
     <Compile Include="src\Storables\StorableString.cs" />
     <Compile Include="src\UI\InactiveWindow.cs" />
-    <Compile Include="src\UI\IWindow.cs" />
     <Compile Include="src\UI\MainWindow.cs" />
     <Compile Include="src\UI\WindowBase.cs" />
     <Compile Include="src\Utils\Calc.cs" />

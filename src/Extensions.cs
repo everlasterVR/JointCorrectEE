@@ -45,25 +45,6 @@ static class MonoBehaviourExtensions
 
 static class MVRScriptExtensions
 {
-    public static Transform InstantiateTextField(this MVRScript script, Transform parent = null) =>
-        UnityEngine.Object.Instantiate(script.manager.configurableTextFieldPrefab, parent, false);
-
-    public static UIDynamic NewSpacer(
-        this MVRScript script,
-        float height,
-        bool rightSide = false
-    )
-    {
-        if(height <= 0)
-        {
-            return null;
-        }
-
-        var spacer = script.CreateSpacer(rightSide);
-        spacer.height = height;
-        return spacer;
-    }
-
     public static void RemoveElement(this MVRScript script, UIDynamic element)
     {
         try
