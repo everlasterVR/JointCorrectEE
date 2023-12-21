@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 
 sealed class MainWindow : WindowBase
 {

@@ -1,4 +1,4 @@
-﻿sealed class InactiveWindow : WindowBase
+sealed class InactiveWindow : WindowBase
 {
     public InactiveWindow(JointCorrectEE script) : base(script, nameof(InactiveWindow))
     {

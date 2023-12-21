@@ -77,12 +77,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="src\BoneConfig.cs" />
     <Compile Include="src\Components\UnityEventsListener.cs" />
     <Compile Include="src\Extensions.cs" />
     <Compile Include="src\JointCorrectEE.cs" />
-    <Compile Include="src\MorphConfig.cs" />
-    <Compile Include="src\Person.cs" />
+    <Compile Include="src\Models\BoneConfig.cs" />
+    <Compile Include="src\Models\MorphConfig.cs" />
+    <Compile Include="src\Models\Person.cs" />
     <Compile Include="src\Resources.cs" />
     <Compile Include="src\ScriptBase.cs" />
     <Compile Include="src\Storables\StorableBool.cs" />
