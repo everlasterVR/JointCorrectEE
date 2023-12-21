@@ -14,7 +14,12 @@ sealed class MainWindow : WindowBase
 
     void BuildLeftSide(bool rightSide = false)
     {
-        AddSpacer(80, rightSide);
+        CreateHeaderTextField(
+            "\n".Size(24) + $"{nameof(JointCorrectEE)}    v{ScriptBase.VERSION}".Bold(),
+            fontSize: 40,
+            height: 80,
+            rightSide: false
+        );
 
         foreach(var config in script.BoneConfigs.Take(7))
         {
@@ -44,14 +49,6 @@ sealed class MainWindow : WindowBase
         foreach(var config in script.BoneConfigs.Skip(7))
         {
             AddElement(() => MultiplierSlider(config.multiplierFloat, rightSide));
-        }
-
-        /* Version text field */
-        {
-            var versionJss = new JSONStorableString("version", "");
-            var versionTextField = CreateVersionTextField(versionJss);
-            AddElement(versionTextField);
-            script.AddTextFieldToJss(versionTextField, versionJss);
         }
     }
 
