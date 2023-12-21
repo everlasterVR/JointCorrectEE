@@ -14,12 +14,12 @@ sealed class MainWindow : WindowBase
 
     void BuildLeftSide(bool rightSide = false)
     {
-        CreateHeaderTextField(
+        AddElement(() => CreateHeaderTextField(
             "\n".Size(24) + $"{nameof(JointCorrectEE)}    v{ScriptBase.VERSION}".Bold(),
             fontSize: 40,
             height: 80,
             rightSide: false
-        );
+        ));
 
         foreach(var config in script.BoneConfigs.Take(7))
         {
